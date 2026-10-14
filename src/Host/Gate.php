@@ -37,8 +37,12 @@ class Gate {
 	/** Served to anyone, because there is nothing behind them. */
 	private const OPEN_PATHS = array( '/robots.txt' );
 
-	/** wp-login.php screens the till's own login cannot replace. */
-	private const LOGIN_ACTIONS = array( 'lostpassword', 'retrievepassword', 'rp', 'resetpass', 'logout' );
+	/**
+	 * wp-login.php screens that stay open on the POS host. Sign-in among them:
+	 * beltoft-hardening lets administrators sign in only there (the two-factor
+	 * step lives on it), so the till's own login form cannot serve them.
+	 */
+	private const LOGIN_ACTIONS = array( 'login', 'lostpassword', 'retrievepassword', 'rp', 'resetpass', 'logout' );
 
 	/** The login page's own form submits through admin-ajax while logged out. */
 	private const OPEN_AJAX = array( 'bricks_form_submit' );
@@ -57,8 +61,15 @@ class Gate {
 		// After core's cookie check (100), which may still reset the user.
 		add_filter( 'rest_authentication_errors', array( __CLASS__, 'guard_rest' ), 101 );
 		add_action( 'login_init', array( __CLASS__, 'guard_login' ), 1 );
-		add_filter( 'login_url', array( __CLASS__, 'login_url' ) );
+		add_filter( 'login_redirect', array( __CLASS__, 'after_login' ), 10, 2 );
 		add_filter( 'logout_redirect', array( __CLASS__, 'logout_redirect' ) );
+
+		/*
+		 * wp_login_url() is deliberately NOT filtered. Bricks recognises
+		 * wp-login.php by comparing against it; pointed at the till's login,
+		 * it took wp-login.php for the registration URL and sent it to the
+		 * shop's sign-up page.
+		 */
 	}
 
 	public static function decide( string $path, ?WP_User $user ): string {
@@ -218,11 +229,25 @@ class Gate {
 	}
 
 	/**
-	 * @param mixed $url
+	 * Signing in on the POS host lands on the till. The default target is the
+	 * admin, which lives on retail, where this sign-in does not count.
+	 *
+	 * @param mixed $redirect_to
+	 * @param mixed $requested
 	 * @return mixed
 	 */
-	public static function login_url( $url ) {
-		return Host::is_pos_host() ? Options::login_url() : $url;
+	public static function after_login( $redirect_to, $requested = '' ) {
+		if ( ! Host::is_pos_host() ) {
+			return $redirect_to;
+		}
+
+		$requested = is_string( $requested ) ? $requested : '';
+
+		if ( '' === $requested || false !== strpos( $requested, '/wp-admin' ) ) {
+			return home_url( '/' );
+		}
+
+		return $redirect_to;
 	}
 
 	/**

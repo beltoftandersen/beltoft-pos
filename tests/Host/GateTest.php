@@ -69,13 +69,30 @@ class PosGateTest extends WP_UnitTestCase {
 		$this->assertNull( Gate::guard_rest( null ), 'Other hosts are not ours to close.' );
 	}
 
-	public function test_wp_login_only_for_password_reset_and_logout() {
-		foreach ( array( 'lostpassword', 'retrievepassword', 'rp', 'resetpass', 'logout' ) as $action ) {
+	/** Admins must sign in at wp-login.php (beltoft-hardening, for two-factor), so it stays open. */
+	public function test_wp_login_is_open_for_sign_in_reset_and_logout_only() {
+		foreach ( array( 'login', 'lostpassword', 'retrievepassword', 'rp', 'resetpass', 'logout' ) as $action ) {
 			$this->assertTrue( Gate::login_action_allowed( $action ), $action );
 		}
 
-		$this->assertFalse( Gate::login_action_allowed( 'login' ) );
 		$this->assertFalse( Gate::login_action_allowed( 'register' ) );
+		$this->assertFalse( Gate::login_action_allowed( 'confirm_admin_email' ) );
+	}
+
+	/** Bricks reads wp_login_url() to recognise wp-login.php; changing it sent the till to /registar/. */
+	public function test_the_wordpress_login_url_is_left_alone_on_the_pos_host() {
+		$_SERVER['HTTP_HOST'] = Host::name();
+		$this->assertStringContainsString( '/wp-login.php', wp_login_url() );
+	}
+
+	public function test_signing_in_on_the_pos_host_lands_on_the_till_not_the_admin() {
+		$_SERVER['HTTP_HOST'] = Host::name();
+		$this->assertSame( home_url( '/' ), Gate::after_login( admin_url(), '' ) );
+		$this->assertSame( home_url( '/' ), Gate::after_login( admin_url(), admin_url( 'index.php' ) ) );
+		$this->assertSame( home_url( '/caixa/' ), Gate::after_login( home_url( '/caixa/' ), home_url( '/caixa/' ) ), 'An explicit till page is kept.' );
+
+		$_SERVER['HTTP_HOST'] = 'example.org';
+		$this->assertSame( admin_url(), Gate::after_login( admin_url(), '' ) );
 	}
 
 	public function test_elsewhere_till_pages_and_operators_go_to_the_pos_host() {
@@ -87,12 +104,11 @@ class PosGateTest extends WP_UnitTestCase {
 		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( false, null, false ) );
 	}
 
-	public function test_login_and_logout_lead_to_the_till_login_on_the_pos_host() {
+	public function test_logout_leads_to_the_till_login_on_the_pos_host() {
 		$_SERVER['HTTP_HOST'] = Host::name();
-		$this->assertSame( home_url( '/caixa-entrar/' ), Gate::login_url( 'https://x/wp-login.php' ) );
 		$this->assertSame( home_url( '/caixa-entrar/' ), Gate::logout_redirect( 'https://x/' ) );
 
 		$_SERVER['HTTP_HOST'] = 'example.org';
-		$this->assertSame( 'https://x/wp-login.php', Gate::login_url( 'https://x/wp-login.php' ) );
+		$this->assertSame( 'https://x/', Gate::logout_redirect( 'https://x/' ) );
 	}
 }
