@@ -9,6 +9,7 @@ use BeltoftPos\Receipt\Printing;
 class PosPrintingTest extends WP_UnitTestCase {
 
 	public function tearDown(): void {
+		unset( $_SERVER['HTTP_HOST'] );
 		remove_all_filters( 'beltoft_pos_printing' );
 		parent::tearDown();
 	}
@@ -16,6 +17,7 @@ class PosPrintingTest extends WP_UnitTestCase {
 	public function test_printing_is_off_by_default() {
 		$this->assertFalse( Printing::enabled() );
 		$this->assertSame( '0', Printing::render_tag( '{beltoft_pos_printing}' ) );
+		$_SERVER['HTTP_HOST'] = \BeltoftPos\Support\Host::name();
 		$this->assertSame( 'on: 0', Printing::render_content( 'on: {beltoft_pos_printing}' ) );
 	}
 
@@ -34,5 +36,11 @@ class PosPrintingTest extends WP_UnitTestCase {
 	public function test_the_tag_is_offered_in_the_builder() {
 		$names = array_column( Printing::add_tag( array() ), 'name' );
 		$this->assertContains( '{beltoft_pos_printing}', $names );
+	}
+
+	/** Retail and B2B pages are not scanned for a tag that only the till uses. */
+	public function test_other_hosts_are_not_scanned() {
+		$_SERVER['HTTP_HOST'] = 'example.org';
+		$this->assertSame( 'on: {beltoft_pos_printing}', Printing::render_content( 'on: {beltoft_pos_printing}' ) );
 	}
 }

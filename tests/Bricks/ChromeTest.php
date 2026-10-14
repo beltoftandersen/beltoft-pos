@@ -60,4 +60,18 @@ class PosChromeTest extends WP_UnitTestCase {
 
 		$this->assertSame( $this->retail(), Chrome::choose( $this->retail() ) );
 	}
+
+	public function test_admins_are_told_when_the_till_header_is_missing() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		set_current_screen( 'dashboard' );
+
+		ob_start();
+		Chrome::admin_notice();
+		$this->assertSame( '', ob_get_clean(), 'Present: nothing to say.' );
+
+		wp_delete_post( $this->header, true );
+		ob_start();
+		Chrome::admin_notice();
+		$this->assertStringContainsString( Chrome::HEADER_SLUG, ob_get_clean() );
+	}
 }

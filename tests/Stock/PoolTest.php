@@ -178,6 +178,16 @@ class PosPoolTest extends WP_UnitTestCase {
 		$this->assertSame( 3, $this->shelf() );
 	}
 
+	public function test_a_till_restock_leaves_an_order_note() {
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->refund( $order, 1 );
+
+		$notes = implode( ' | ', wp_list_pluck( wc_get_order_notes( array( 'order_id' => $order->get_id() ) ), 'content' ) );
+		$this->assertStringContainsString( 'Till stock', $notes );
+		$this->assertStringContainsString( '1 → 2', $notes );
+	}
+
 	public function test_a_refunded_website_order_is_left_to_woocommerce() {
 		$this->assertTrue( Pool::divert_restock_refund( true, $this->sale( 2, false ), array() ) );
 	}

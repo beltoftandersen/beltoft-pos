@@ -2,6 +2,8 @@
 
 namespace BeltoftPos\Receipt;
 
+use BeltoftPos\Support\Host;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -69,7 +71,8 @@ class Printing {
 	 * @return mixed
 	 */
 	public static function render_content( $content ) {
-		if ( ! is_string( $content ) || false === strpos( $content, '{' . self::TAG . '}' ) ) {
+		// Only the till uses the tag; other hosts' pages are not scanned for it.
+		if ( ! Host::is_pos_host() || ! is_string( $content ) || false === strpos( $content, '{' . self::TAG . '}' ) ) {
 			return $content;
 		}
 

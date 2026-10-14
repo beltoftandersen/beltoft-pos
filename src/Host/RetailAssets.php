@@ -22,6 +22,7 @@ class RetailAssets {
 		'woosw-icons',
 		'notiny',
 		'perfect-scrollbar',
+		'perfect-scrollbar-wpc',
 	);
 
 	public static function register(): void {

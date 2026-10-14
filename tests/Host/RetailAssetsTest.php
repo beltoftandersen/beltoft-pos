@@ -11,6 +11,7 @@ class PosRetailAssetsTest extends WP_UnitTestCase {
 		wp_enqueue_script( 'custom-menu-scripts', 'https://x/custom-menu-scripts.js', array(), '1', true );
 		wp_enqueue_script( 'woosw-frontend', 'https://x/woosw.js', array(), '1', true );
 		wp_enqueue_script( 'beltoft-pos-list', 'https://x/list.js', array(), '1', true );
+		wp_enqueue_style( 'perfect-scrollbar-wpc', 'https://x/ps.css', array(), '1' );
 	}
 
 	public function tearDown(): void {
@@ -29,6 +30,7 @@ class PosRetailAssetsTest extends WP_UnitTestCase {
 
 		$this->assertFalse( wp_script_is( 'custom-menu-scripts', 'enqueued' ), 'The retail mega menu is not on the page.' );
 		$this->assertFalse( wp_script_is( 'woosw-frontend', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'perfect-scrollbar-wpc', 'enqueued' ) );
 		$this->assertTrue( wp_script_is( 'beltoft-pos-list', 'enqueued' ) );
 	}
 

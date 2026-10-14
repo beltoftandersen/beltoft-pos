@@ -1,18 +1,16 @@
-# Copyright (C) 2026 beltoft.net
-# This file is distributed under the same license as the Beltoft POS plugin.
 msgid ""
 msgstr ""
 "Project-Id-Version: Beltoft POS 0.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-pos\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Portuguese (Portugal)\n"
-"Language: pt_PT\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-10-14T10:38:04+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Language: pt_PT\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: beltoft-pos\n"
 
@@ -31,11 +29,11 @@ msgstr "Ponto de venda para o balcão da loja: o seu próprio domínio, início 
 msgid "beltoft.net"
 msgstr "beltoft.net"
 
-#: src/Checkout/Page.php:99
+#: src/Checkout/Page.php:112
 msgid "Till not set up."
 msgstr "Caixa não configurada."
 
-#: src/Checkout/Page.php:115
+#: src/Checkout/Page.php:128
 msgid "The till has no page yet. Publish the POS page and set its ID in the option beltoft_pos_page_id."
 msgstr "A caixa ainda não tem página. Publique a página da caixa e defina o seu ID na opção beltoft_pos_page_id."
 
@@ -69,16 +67,16 @@ msgstr "Dinheiro"
 msgid "Bank transfer"
 msgstr "Transferência bancária"
 
-#: src/Host/Gate.php:284
+#: src/Host/Gate.php:316
 msgid "Please sign in to the till."
 msgstr "Inicie sessão na caixa."
 
-#: src/Host/Gate.php:285
+#: src/Host/Gate.php:317
 #: src/Receipt/Email.php:63
 msgid "This account has no access to the till."
 msgstr "Esta conta não tem acesso à caixa."
 
-#: src/Plugin.php:53
+#: src/Plugin.php:63
 msgid "Beltoft POS needs WooCommerce."
 msgstr "O Beltoft POS precisa do WooCommerce."
 
@@ -134,3 +132,54 @@ msgstr "Operador de caixa"
 #: src/Support/Options.php:46
 msgid "Walk-in customer"
 msgstr "Cliente de balcão"
+
+#. translators: %s: template slug.
+#: src/Bricks/Chrome.php:83
+#, php-format
+msgid "The till has no header: publish a Bricks header template with the slug %s (no conditions)."
+msgstr "A caixa não tem cabeçalho: publique um template de cabeçalho do Bricks com o slug %s (sem condições)."
+
+#: src/Catalog/LoopQuantity.php:127
+#: src/Catalog/LoopQuantity.php:245
+msgid "Quantity"
+msgstr "Quantidade"
+
+#: src/Catalog/LoopQuantity.php:131
+#: src/Catalog/LoopQuantity.php:247
+msgid "Decrease quantity"
+msgstr "Diminuir quantidade"
+
+#: src/Catalog/LoopQuantity.php:132
+#: src/Catalog/LoopQuantity.php:248
+msgid "Increase quantity"
+msgstr "Aumentar quantidade"
+
+#: src/Catalog/LoopQuantity.php:167
+msgid "Sold out"
+msgstr "Esgotado"
+
+#. translators: %d: units in stock.
+#: src/Catalog/LoopQuantity.php:280
+#, php-format
+msgid "Only %d in stock."
+msgstr "Apenas %d em stock."
+
+#. translators: %d: units in stock.
+#: src/Catalog/LoopQuantity.php:282
+#, php-format
+msgid "Could not add. Only %d in stock."
+msgstr "Não foi possível adicionar. Apenas %d em stock."
+
+#: src/Catalog/LoopQuantity.php:283
+msgid "Could not add this line."
+msgstr "Não foi possível adicionar esta linha."
+
+#: src/Receipt/Printing.php:50
+msgid "Till printing is on (1/0)"
+msgstr "Impressão na caixa ligada (1/0)"
+
+#. translators: 1: product id, 2: till stock before, 3: till stock after.
+#: src/Stock/Pool.php:192
+#, php-format
+msgid "Till stock of item #%1$s: %2$s → %3$s."
+msgstr "Stock da caixa do artigo #%1$s: %2$s → %3$s."

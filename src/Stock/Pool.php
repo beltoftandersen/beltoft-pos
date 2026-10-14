@@ -172,6 +172,34 @@ class Pool {
 	}
 
 	/**
+	 * Move a count and describe the move for the order's notes, the way
+	 * WooCommerce notes "Item #x stock reduced from a to b" for its own stock.
+	 * The before/after values are read from the database, not the cache.
+	 */
+	private static function move_noted( int $product_id, int $delta ): string {
+		global $wpdb;
+
+		$read = static fn() => (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s",
+			$product_id,
+			self::META
+		) );
+
+		$before = $read();
+		self::move( $product_id, $delta );
+
+		/* translators: 1: product id, 2: till stock before, 3: till stock after. */
+		return sprintf( __( 'Till stock of item #%1$s: %2$s → %3$s.', 'beltoft-pos' ), $product_id, $before, $read() );
+	}
+
+	/** @param string[] $lines */
+	private static function note( WC_Order $order, array $lines ): void {
+		if ( $lines ) {
+			$order->add_order_note( implode( "\n", $lines ) );
+		}
+	}
+
+	/**
 	 * The till's count for a product, or null when it has never been counted.
 	 */
 	private static function counted( int $product_id ): ?int {
@@ -283,6 +311,8 @@ class Pool {
 			return $can;
 		}
 
+		$notes = array();
+
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$qty     = abs( (int) ( $refunded_line_items[ $item_id ]['qty'] ?? 0 ) );
 			$reduced = $item->get_meta( self::LINE_REDUCED, true );
@@ -302,10 +332,12 @@ class Pool {
 
 			$back = min( $qty, (int) $reduced );
 
-			self::move( $product->get_id(), $back );
+			$notes[] = self::move_noted( $product->get_id(), $back );
 			$item->update_meta_data( self::LINE_REDUCED, (int) $reduced - $back );
 			$item->save();
 		}
+
+		self::note( $order, $notes );
 
 		// WooCommerce must not also put it back in the shared pool.
 		return false;
@@ -329,6 +361,8 @@ class Pool {
 			return $can;
 		}
 
+		$notes = array();
+
 		foreach ( $order->get_items() as $item ) {
 			$product = $item->get_product();
 
@@ -344,7 +378,7 @@ class Pool {
 			}
 
 			if ( $sign < 0 ) {
-				self::move( $id, -(int) $item->get_quantity() );
+				$notes[] = self::move_noted( $id, -(int) $item->get_quantity() );
 				$item->update_meta_data( self::LINE_REDUCED, (int) $item->get_quantity() );
 				$item->save();
 
@@ -359,10 +393,12 @@ class Pool {
 			$reduced = $item->get_meta( self::LINE_REDUCED, true );
 			$back    = '' === $reduced ? (int) $item->get_quantity() : max( 0, (int) $reduced );
 
-			self::move( $id, $back );
+			$notes[] = self::move_noted( $id, $back );
 			$item->delete_meta_data( self::LINE_REDUCED );
 			$item->save();
 		}
+
+		self::note( $order, $notes );
 
 		// WooCommerce must not also touch the shared pool for this order.
 		return false;

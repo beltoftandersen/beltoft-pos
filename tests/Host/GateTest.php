@@ -58,18 +58,40 @@ class PosGateTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The theme hooks wp_logout to redirect and exit, which swallowed the
-	 * refusal notice. A refused account is signed out without that action.
+	 * The theme hooks wp_logout to redirect to the shop's sign-in and exit,
+	 * which swallowed the till's refusal notice and sent its logout the long
+	 * way round. On the POS host that one callback is taken off; every other
+	 * logout handler still runs.
 	 */
-	public function test_a_refused_account_is_signed_out_without_the_logout_action() {
-		wp_set_current_user( $this->customer->ID );
-		add_action( 'wp_logout', function () {
-			throw new RuntimeException( 'wp_logout fired' );
-		} );
+	public function test_on_the_pos_host_logout_skips_the_shop_redirect_but_not_other_handlers() {
+		if ( ! function_exists( 'ps_redirect_after_logout' ) ) {
+			eval( 'function ps_redirect_after_logout() { throw new RuntimeException( "shop logout redirect ran" ); }' );
+		}
+		add_action( 'wp_logout', 'ps_redirect_after_logout' );
 
+		$_SERVER['HTTP_HOST'] = Host::name();
+		Gate::calm_logout();
+		$this->assertFalse( has_action( 'wp_logout', 'ps_redirect_after_logout' ) );
+
+		wp_set_current_user( $this->customer->ID );
 		Gate::sign_out();
 
 		$this->assertSame( 0, get_current_user_id() );
+		// The wp_logout() path itself (headers not yet sent) is checked on
+		// staging: PHPUnit has always sent its headers by now.
+	}
+
+	public function test_other_hosts_keep_the_shop_logout_redirect() {
+		if ( ! function_exists( 'ps_redirect_after_logout' ) ) {
+			eval( 'function ps_redirect_after_logout() { throw new RuntimeException( "shop logout redirect ran" ); }' );
+		}
+		add_action( 'wp_logout', 'ps_redirect_after_logout' );
+		$_SERVER['HTTP_HOST'] = 'example.org';
+
+		Gate::calm_logout();
+
+		$this->assertSame( 10, has_action( 'wp_logout', 'ps_redirect_after_logout' ) );
+		remove_action( 'wp_logout', 'ps_redirect_after_logout' );
 	}
 
 	public function test_api_calls() {

@@ -75,6 +75,7 @@ class Gate {
 		// After core's cookie check (100), which may still reset the user.
 		add_filter( 'rest_authentication_errors', array( __CLASS__, 'guard_rest' ), 101 );
 		add_action( 'login_init', array( __CLASS__, 'guard_login' ), 1 );
+		add_action( 'init', array( __CLASS__, 'calm_logout' ), 20 );
 		add_filter( 'login_redirect', array( __CLASS__, 'after_login' ), 10, 2 );
 		add_filter( 'logout_redirect', array( __CLASS__, 'logout_redirect' ) );
 
@@ -175,21 +176,34 @@ class Gate {
 	}
 
 	/**
-	 * Sign a refused account out WITHOUT wp_logout().
+	 * Take the shop's logout redirect off the POS host.
 	 *
-	 * wp_logout() fires the `wp_logout` action, and the theme hooks it to
-	 * redirect to the shop's own sign-in page and exit - so the refusal notice
-	 * on the till's login page was never reached. The session and cookies go
-	 * exactly as they would; only the shop's logout behaviour is skipped.
+	 * The theme hooks `wp_logout` to send everyone to the shop's own sign-in
+	 * page and exit. On the till that swallowed the refusal notice and sent
+	 * the header's logout the long way round (shop sign-in, then the gate).
+	 * Only that one callback is removed - every other logout handler runs -
+	 * and only on the POS host.
 	 */
-	public static function sign_out(): void {
-		wp_destroy_current_session();
+	public static function calm_logout(): void {
+		if ( Host::is_pos_host() && function_exists( 'ps_redirect_after_logout' ) ) {
+			remove_action( 'wp_logout', 'ps_redirect_after_logout' );
+		}
+	}
 
-		if ( ! headers_sent() ) {
-			wp_clear_auth_cookie();
+	/** Sign a refused account out - WordPress's own logout, minus the shop's redirect. */
+	public static function sign_out(): void {
+		self::calm_logout();
+
+		if ( headers_sent() ) {
+			// Too late for cookies - logout handlers would only fail to set
+			// theirs - but the session still ends on the server.
+			wp_destroy_current_session();
+			wp_set_current_user( 0 );
+
+			return;
 		}
 
-		wp_set_current_user( 0 );
+		wp_logout();
 	}
 
 	public static function guard_wc_ajax(): void {

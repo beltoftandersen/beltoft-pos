@@ -27,6 +27,7 @@ class Chrome {
 
 	public static function register(): void {
 		add_filter( 'bricks/active_templates', array( __CLASS__, 'choose' ), 10, 3 );
+		add_action( 'admin_notices', array( __CLASS__, 'admin_notice' ) );
 	}
 
 	/**
@@ -56,6 +57,34 @@ class Chrome {
 		}
 
 		return $active_templates;
+	}
+
+	/**
+	 * Without its header template the till falls back to the shop's header -
+	 * whose menu script is kept off the till - so say so where it is noticed
+	 * (most likely right after a production replay).
+	 */
+	public static function admin_notice(): void {
+		if ( self::template_id( self::HEADER_SLUG ) || ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p>%s</p></div>',
+			esc_html(
+				sprintf(
+					/* translators: %s: template slug. */
+					__( 'The till has no header: publish a Bricks header template with the slug %s (no conditions).', 'beltoft-pos' ),
+					self::HEADER_SLUG
+				)
+			)
+		);
 	}
 
 	private static function template_id( string $slug ): int {

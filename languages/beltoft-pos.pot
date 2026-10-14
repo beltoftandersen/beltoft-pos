@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the Beltoft POS plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Beltoft POS 0.1.0\n"
+"Project-Id-Version: Beltoft POS 0.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-pos\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T10:38:04+00:00\n"
+"POT-Creation-Date: 2026-10-14T15:48:30+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: beltoft-pos\n"
@@ -29,11 +29,52 @@ msgstr ""
 msgid "beltoft.net"
 msgstr ""
 
-#: src/Checkout/Page.php:99
+#. translators: %s: template slug.
+#: src/Bricks/Chrome.php:83
+#, php-format
+msgid "The till has no header: publish a Bricks header template with the slug %s (no conditions)."
+msgstr ""
+
+#: src/Catalog/LoopQuantity.php:127
+#: src/Catalog/LoopQuantity.php:245
+msgid "Quantity"
+msgstr ""
+
+#: src/Catalog/LoopQuantity.php:131
+#: src/Catalog/LoopQuantity.php:247
+msgid "Decrease quantity"
+msgstr ""
+
+#: src/Catalog/LoopQuantity.php:132
+#: src/Catalog/LoopQuantity.php:248
+msgid "Increase quantity"
+msgstr ""
+
+#: src/Catalog/LoopQuantity.php:167
+msgid "Sold out"
+msgstr ""
+
+#. translators: %d: units in stock.
+#: src/Catalog/LoopQuantity.php:280
+#, php-format
+msgid "Only %d in stock."
+msgstr ""
+
+#. translators: %d: units in stock.
+#: src/Catalog/LoopQuantity.php:282
+#, php-format
+msgid "Could not add. Only %d in stock."
+msgstr ""
+
+#: src/Catalog/LoopQuantity.php:283
+msgid "Could not add this line."
+msgstr ""
+
+#: src/Checkout/Page.php:112
 msgid "Till not set up."
 msgstr ""
 
-#: src/Checkout/Page.php:115
+#: src/Checkout/Page.php:128
 msgid "The till has no page yet. Publish the POS page and set its ID in the option beltoft_pos_page_id."
 msgstr ""
 
@@ -67,16 +108,16 @@ msgstr ""
 msgid "Bank transfer"
 msgstr ""
 
-#: src/Host/Gate.php:284
+#: src/Host/Gate.php:316
 msgid "Please sign in to the till."
 msgstr ""
 
-#: src/Host/Gate.php:285
+#: src/Host/Gate.php:317
 #: src/Receipt/Email.php:63
 msgid "This account has no access to the till."
 msgstr ""
 
-#: src/Plugin.php:53
+#: src/Plugin.php:63
 msgid "Beltoft POS needs WooCommerce."
 msgstr ""
 
@@ -104,6 +145,10 @@ msgstr ""
 msgid "The receipt could not be sent."
 msgstr ""
 
+#: src/Receipt/Printing.php:50
+msgid "Till printing is on (1/0)"
+msgstr ""
+
 #: src/Stock/AdminField.php:35
 #: src/Stock/AdminField.php:63
 msgid "Till stock"
@@ -111,6 +156,12 @@ msgstr ""
 
 #: src/Stock/AdminField.php:82
 msgid "Counted separately from the shop stock above. Leave empty if it has never been counted. The till never refuses a sale over this count, so it can go below zero."
+msgstr ""
+
+#. translators: 1: product id, 2: till stock before, 3: till stock after.
+#: src/Stock/Pool.php:192
+#, php-format
+msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr ""
 
 #. translators: %d: number of products whose till stock has gone below zero.
