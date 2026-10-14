@@ -7,13 +7,14 @@
  * Text Domain:      beltoft-pos
  * Domain Path:      /languages
  * Requires PHP:     8.3
- * Requires Plugins: woocommerce, beltoft-commerce
+ * Requires Plugins: woocommerce
  */
 
 defined( 'ABSPATH' ) || exit;
 
 define( 'BELTOFT_POS_FILE', __FILE__ );
 define( 'BELTOFT_POS_PATH', plugin_dir_path( __FILE__ ) );
+define( 'BELTOFT_POS_VERSION', '0.1.0' );
 
 spl_autoload_register( function ( $class ) {
 	$prefix = 'BeltoftPos\\';
@@ -30,5 +31,7 @@ spl_autoload_register( function ( $class ) {
 	}
 } );
 
-// After beltoft-commerce, whose pricing groups, stock pool and catalog audience the till uses.
+// WooCommerce boots on plugins_loaded at 10; the till wires its hooks after it.
 add_action( 'plugins_loaded', array( 'BeltoftPos\\Plugin', 'init' ), 20 );
+
+register_activation_hook( __FILE__, array( 'BeltoftPos\\Support\\Installer', 'install' ) );
