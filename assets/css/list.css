@@ -67,7 +67,7 @@
    a.button[data-product_id]`, so matching that shape is what it takes to
    settle the height; a plainer selector loses and the two button kinds sat
    2px apart. */
-.brxe-b59c51.brxe-product-add-to-cart a.button[data-product_id],
+.brxe-p23d8b.brxe-product-add-to-cart a.button[data-product_id],
 .brxe-product-add-to-cart .button,.beltoft-loop-variable__add{
 	/* 40px, not 38: something in the theme stack sets min-height:40px on Woo's
 	   own loop button, and min-height beats height, so `height:38px` was
