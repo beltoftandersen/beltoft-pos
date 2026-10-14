@@ -44,6 +44,8 @@
 		var pick=wrap&&wrap.querySelector('.beltoft-loop-variation');
 		var qty=wrap&&wrap.querySelector('.beltoft-loop-qty__input');
 		if(!wrap||!pick)return;
+		/* One add at a time per row: a double tap must not add twice. */
+		if(add.classList.contains('is-busy'))return;
 		/*
 		 * The VARIATION id goes in as product_id. WC_AJAX::add_to_cart ignores
 		 * a variation_id field entirely and instead detects that the posted
@@ -57,7 +59,7 @@
 		var label=add.textContent;
 		/* Bricks restores the label it saved on `adding_to_cart` - an event this
 		   path never fires - so it put back nothing and left the button blank. */
-		add.setAttribute('data-original-text',add.innerHTML);
+		if(!add.hasAttribute('data-original-text'))add.setAttribute('data-original-text',add.innerHTML);
 		add.classList.add('is-busy');
 		add.setAttribute('aria-busy','true');
 		fetch('/?wc-ajax=add_to_cart',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()})
