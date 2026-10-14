@@ -34,6 +34,7 @@ class Plugin {
 		Checkout\Page::register();
 		Checkout\Tenders::register();
 		Checkout\PaymentMethods::register();
+		Checkout\Counter::register();
 	}
 
 	public static function needs_woocommerce(): void {
