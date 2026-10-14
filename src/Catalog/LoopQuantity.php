@@ -260,9 +260,8 @@ class LoopQuantity {
 	 */
 
 	/**
-	 * The control's styles and script, on the till page only. Kept as files
-	 * rather than printed inline: the till's front end is Bricks, and these
-	 * style markup that Bricks cannot produce (a quantity inside a loop).
+	 * The control's script, on the till page only. Its styles are Bricks: the
+	 * custom CSS of the list's add-to-cart element on the till page.
 	 */
 	public static function enqueue(): void {
 		$page = Options::page_id();
@@ -271,7 +270,6 @@ class LoopQuantity {
 			return;
 		}
 
-		wp_enqueue_style( 'beltoft-pos-list', plugins_url( 'assets/css/list.css', BELTOFT_POS_FILE ), array(), BELTOFT_POS_VERSION );
 		wp_enqueue_script( 'beltoft-pos-list', plugins_url( 'assets/js/list.js', BELTOFT_POS_FILE ), array(), BELTOFT_POS_VERSION, true );
 		wp_localize_script(
 			'beltoft-pos-list',
