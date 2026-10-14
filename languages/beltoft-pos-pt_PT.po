@@ -67,11 +67,11 @@ msgstr "Dinheiro"
 msgid "Bank transfer"
 msgstr "Transferência bancária"
 
-#: src/Host/Gate.php:376
+#: src/Host/Gate.php:401
 msgid "Please sign in to the till."
 msgstr "Inicie sessão na caixa."
 
-#: src/Host/Gate.php:377
+#: src/Host/Gate.php:402
 #: src/Receipt/Email.php:65
 msgid "This account has no access to the till."
 msgstr "Esta conta não tem acesso à caixa."
@@ -134,7 +134,7 @@ msgid "Walk-in customer"
 msgstr "Cliente de balcão"
 
 #. translators: %s: template slug.
-#: src/Bricks/Chrome.php:83
+#: src/Bricks/Chrome.php:89
 #, php-format
 msgid "The till has no header: publish a Bricks header template with the slug %s (no conditions)."
 msgstr "A caixa não tem cabeçalho: publique um template de cabeçalho do Bricks com o slug %s (sem condições)."
@@ -179,7 +179,7 @@ msgid "Till printing is on (1/0)"
 msgstr "Impressão na caixa ligada (1/0)"
 
 #. translators: 1: product id, 2: till stock before, 3: till stock after.
-#: src/Stock/Pool.php:231
+#: src/Stock/Pool.php:237
 #, php-format
 msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr "Stock da caixa do artigo #%1$s: %2$s → %3$s."
@@ -191,3 +191,7 @@ msgstr "O Beltoft POS não está acessível: defina o endereço da caixa com <co
 #: src/Receipt/Email.php:81
 msgid "This receipt belongs to another operator's sale."
 msgstr "Este recibo pertence a uma venda de outro operador."
+
+#: src/Host/Gate.php:216
+msgid "The till is not set up yet: its login page is missing."
+msgstr "A caixa ainda não está configurada: falta a página de entrada."

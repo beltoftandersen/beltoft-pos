@@ -124,4 +124,18 @@ class PosCounterTest extends WP_UnitTestCase {
 		$this->at_the_till();
 		$this->assertSame( 0, Counter::no_customer( $this->operator ) );
 	}
+
+	/** A guest sale's receipt reopened at the till does not ask the operator to verify an email. */
+	public function test_the_till_is_not_asked_to_verify_a_sale_email() {
+		$sale = wc_create_order();
+		\BeltoftPos\Support\Till::mark_sale( $sale );
+		$sale->save();
+		$web = wc_create_order();
+
+		$this->assertTrue( Counter::no_email_check( true, $sale ), 'Outside the till session: unchanged.' );
+
+		$this->at_the_till();
+		$this->assertFalse( Counter::no_email_check( true, $sale ) );
+		$this->assertTrue( Counter::no_email_check( true, $web ) );
+	}
 }

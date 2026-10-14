@@ -36,6 +36,7 @@ class Counter {
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'prefill' ), 10, 2 );
 		add_filter( 'woocommerce_checkout_update_customer_data', array( __CLASS__, 'keep_account_clean' ) );
 		add_filter( 'woocommerce_checkout_customer_id', array( __CLASS__, 'no_customer' ) );
+		add_filter( 'woocommerce_order_email_verification_required', array( __CLASS__, 'no_email_check' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'clear_after_sale' ), 99 );
 		add_filter( 'woocommerce_format_postcode', array( __CLASS__, 'blank_postcode_stays_blank' ), 10, 2 );
 
@@ -171,6 +172,19 @@ class Counter {
 	 */
 	public static function no_customer( $customer_id ) {
 		return Till::is_session() ? 0 : $customer_id;
+	}
+
+	/**
+	 * A guest order's receipt, reopened at the till after WooCommerce's grace
+	 * period, asked the operator to "verify the order's email" - an email
+	 * the walk-in sale does not have. The till user is who rang it up.
+	 *
+	 * @param mixed $required
+	 * @param mixed $order
+	 * @return mixed
+	 */
+	public static function no_email_check( $required, $order = null ) {
+		return Till::is_session() && Till::is_pos_sale( $order ) ? false : $required;
 	}
 
 	/**

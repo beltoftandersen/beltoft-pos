@@ -52,6 +52,7 @@ class Plugin {
 		Scanner\Context::register();
 		Receipt\Email::register();
 		Receipt\Quiet::register();
+		Receipt\TillPurchaseEvent::register();
 		Receipt\Printing::register();
 		Bricks\Chrome::register();
 		Host\RetailAssets::register();

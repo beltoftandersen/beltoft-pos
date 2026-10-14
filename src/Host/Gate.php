@@ -207,6 +207,15 @@ class Gate {
 
 		switch ( $decision ) {
 			case self::LOGIN:
+				/*
+				 * With no published login page (not replayed yet, or put back
+				 * to draft) the login URL is this request again: say so rather
+				 * than redirect to it forever.
+				 */
+				if ( ! Options::login_page_id() && self::normalise( $path ) === Options::login_path() ) {
+					wp_die( esc_html__( 'The till is not set up yet: its login page is missing.', 'beltoft-pos' ), '', array( 'response' => 503 ) );
+				}
+
 				wp_safe_redirect( Options::login_url(), 302 );
 				exit;
 

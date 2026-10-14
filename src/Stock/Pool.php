@@ -49,6 +49,12 @@ class Pool {
 	 */
 	public const LINE_REDUCED = '_beltoft_pos_reduced';
 
+	/** On each order line: units a refund put back on the till's shelf (restock ticked). */
+	public const LINE_RESTOCKED = '_beltoft_pos_restocked';
+
+	/** On each order line: sold while the product had no till count, so it took nothing - ever. */
+	public const LINE_UNCOUNTED = '_beltoft_pos_uncounted';
+
 	public static function register(): void {
 		/*
 		 * Mark a till sale while there is still a
@@ -373,6 +379,7 @@ class Pool {
 
 			$notes[] = self::move_noted( $product->get_id(), $back );
 			$item->update_meta_data( self::LINE_REDUCED, (int) $reduced - $back );
+			$item->update_meta_data( self::LINE_RESTOCKED, (int) $item->get_meta( self::LINE_RESTOCKED, true ) + $back );
 			$item->save();
 		}
 
@@ -408,13 +415,24 @@ class Pool {
 
 		$product = $item->get_product();
 
-		if ( ! $order->get_data_store()->get_stock_reduced( $order->get_id() ) || ! $product instanceof WC_Product || null === self::counted( $product->get_id() ) ) {
+		/*
+		 * A line sold before its product was counted took nothing, and must
+		 * not start taking from a count entered since - the same rule the
+		 * cancellation follows.
+		 */
+		if ( ! $order->get_data_store()->get_stock_reduced( $order->get_id() ) || ! $product instanceof WC_Product || null === self::counted( $product->get_id() ) || $item->get_meta( self::LINE_UNCOUNTED, true ) ) {
 			return true;
 		}
 
-		$quantity = (int) $item_quantity >= 0 ? (int) $item_quantity : (int) $item->get_quantity();
-		$refunded = abs( (int) $order->get_qty_refunded_for_item( $item->get_id() ) );
-		$target   = $quantity > 0 ? max( 0, $quantity - $refunded ) : 0;
+		/*
+		 * Off the shelf: the line's quantity less what refunds put BACK on it.
+		 * Not less everything refunded - a refund without restock (a broken
+		 * item) never returned to the shelf, as WooCommerce's own
+		 * `_restock_refunded_items` also distinguishes.
+		 */
+		$quantity  = (int) $item_quantity >= 0 ? (int) $item_quantity : (int) $item->get_quantity();
+		$restocked = max( 0, (int) $item->get_meta( self::LINE_RESTOCKED, true ) );
+		$target    = $quantity > 0 ? max( 0, $quantity - $restocked ) : 0;
 		$reduced  = max( 0, (int) $item->get_meta( self::LINE_REDUCED, true ) );
 
 		if ( $target !== $reduced ) {
@@ -463,6 +481,7 @@ class Pool {
 			if ( null === self::counted( $id ) ) {
 				if ( $sign < 0 ) {
 					$item->update_meta_data( self::LINE_REDUCED, 0 );
+					$item->update_meta_data( self::LINE_UNCOUNTED, 1 );
 					$item->save();
 				}
 

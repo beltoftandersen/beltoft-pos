@@ -330,4 +330,49 @@ class PosPoolTest extends WP_UnitTestCase {
 
 		$this->assertSame( $this->operator, Till::operator( wc_get_order( $order->get_id() ) ) );
 	}
+
+	private function refund_no_restock( WC_Order $order, int $qty ): void {
+		$item_id = array_key_first( wc_get_order( $order->get_id() )->get_items() );
+		wc_create_refund( array(
+			'order_id'      => $order->get_id(),
+			'amount'        => 0,
+			'line_items'    => array( $item_id => array( 'qty' => $qty, 'refund_total' => 0 ) ),
+			'restock_items' => false,
+		) );
+	}
+
+	/** A unit refunded without restock (broken) never went back, so an admin "Update" must not put it back. */
+	public function test_an_admin_update_after_a_refund_without_restock_moves_nothing() {
+		$order = $this->sale( 3 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->assertSame( 0, $this->shelf() );
+
+		$this->refund_no_restock( $order, 1 );
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ) );
+
+		$this->assertSame( 0, $this->shelf() );
+	}
+
+	public function test_an_admin_update_after_a_restocked_refund_moves_nothing() {
+		$order = $this->sale( 3 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->refund( $order, 1 );
+		$this->assertSame( 1, $this->shelf() );
+
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ) );
+
+		$this->assertSame( 1, $this->shelf() );
+	}
+
+	/** Sold before it was counted: an admin "Update" later must not take it from the new count. */
+	public function test_an_admin_update_of_a_line_sold_before_it_was_counted_moves_nothing() {
+		delete_post_meta( $this->product, Pool::META );
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+
+		update_post_meta( $this->product, Pool::META, 5 );
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ) );
+
+		$this->assertSame( 5, $this->shelf() );
+	}
 }
