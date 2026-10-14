@@ -35,9 +35,11 @@ class Plugin {
 		Checkout\Tenders::register();
 		Checkout\PaymentMethods::register();
 		Checkout\Counter::register();
+		Checkout\Refresh::register();
 		Stock\Pool::register();
 		Stock\AdminField::register();
 		Stock\Recount::register();
+		Scanner\Context::register();
 	}
 
 	public static function needs_woocommerce(): void {
