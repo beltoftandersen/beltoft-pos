@@ -31,6 +31,13 @@ spl_autoload_register( function ( $class ) {
 	}
 } );
 
+/*
+ * Registered now rather than in Plugin::init(): other plugins build URLs
+ * while plugins_loaded is still running, and on the POS host every one of
+ * them must already point here.
+ */
+BeltoftPos\Host\Urls::register();
+
 // WooCommerce boots on plugins_loaded at 10; the till wires its hooks after it.
 add_action( 'plugins_loaded', array( 'BeltoftPos\\Plugin', 'init' ), 20 );
 
