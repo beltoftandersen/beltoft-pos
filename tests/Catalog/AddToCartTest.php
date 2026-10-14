@@ -32,11 +32,8 @@ class PosAddToCartTest extends WP_UnitTestCase {
 		parent::tearDown();
 	}
 
-	public function test_a_variation_button_adds_by_ajax_at_the_till() {
+	public function test_a_variation_link_adds_on_the_till() {
 		$_SERVER['HTTP_HOST'] = Host::name();
-
-		$args = AddToCart::loop_args( array( 'class' => 'button product_type_variation' ), wc_get_product( $this->variation ) );
-		$this->assertStringContainsString( 'ajax_add_to_cart', $args['class'] );
 
 		$url = AddToCart::url( 'https://x/loja/p/?add-to-cart=1', wc_get_product( $this->variation ) );
 		$this->assertSame( add_query_arg( 'add-to-cart', $this->variation, get_permalink( $this->page ) ), $url, 'Without JavaScript it still lands on the till.' );
@@ -44,13 +41,9 @@ class PosAddToCartTest extends WP_UnitTestCase {
 
 	public function test_simple_products_and_other_hosts_are_untouched() {
 		$_SERVER['HTTP_HOST'] = Host::name();
-		$simple = array( 'class' => 'button product_type_simple ajax_add_to_cart' );
-		$this->assertSame( $simple, AddToCart::loop_args( $simple, wc_get_product( $this->simple ) ) );
 		$this->assertSame( 'https://x/', AddToCart::url( 'https://x/', wc_get_product( $this->simple ) ) );
 
 		$_SERVER['HTTP_HOST'] = 'example.org';
-		$args = array( 'class' => 'button product_type_variation' );
-		$this->assertSame( $args, AddToCart::loop_args( $args, wc_get_product( $this->variation ) ) );
 		$this->assertSame( 'https://x/', AddToCart::url( 'https://x/', wc_get_product( $this->variation ) ) );
 	}
 }

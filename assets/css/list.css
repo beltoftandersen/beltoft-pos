@@ -1,0 +1,108 @@
+/* Till product list - quantity control and row buttons, as on the B2B list
+   (ported from beltoft-commerce Frontend\LoopQuantity). */
+/* Matched to the inline cart's quantity control (Bricks'
+   brx-number-layout--inline), measured in the browser: square corners, a 32px
+   row, 32px steppers outlined in #dddedf, and a white input. The two controls
+   sit a few hundred pixels apart on the same screen and doing the same job, so
+   they should not be two different designs. The input is narrower than the
+   cart's 80px only because the list column has a button beside it. */
+.beltoft-loop-qty{
+	display:inline-flex;align-items:stretch;height:32px;background:transparent;
+}
+.beltoft-loop-qty__step{
+	width:32px;flex:0 0 32px;height:32px;padding:0;
+	border:1px solid #dddedf;background:transparent;color:#264F37;
+	font:inherit;font-size:15px;line-height:1;cursor:pointer;
+	display:flex;align-items:center;justify-content:center;
+	transition:background-color .12s,border-color .12s;
+}
+.beltoft-loop-qty__step:hover{background:#f2f5ee;border-color:#cfd8c4}
+.beltoft-loop-qty__step:active{background:#e3e8dd}
+.beltoft-loop-qty__input{
+	width:56px;flex:0 0 56px;height:32px;padding:0;
+	border:1px solid #dddedf;border-left:0;border-right:0;background:#fff;
+	font:inherit;font-size:15px;font-variant-numeric:tabular-nums;
+	text-align:center;-moz-appearance:textfield;color:#1f2a23;
+}
+.beltoft-loop-qty__input:focus{outline:2px solid #264F37;outline-offset:-2px}
+/* The native spinner is redundant next to the buttons and steals width. */
+.beltoft-loop-qty__input::-webkit-outer-spin-button,
+.beltoft-loop-qty__input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* Simple products: stepper then Woo's own button, on one baseline. */
+.brxe-product-add-to-cart{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.beltoft-loop-qty{margin-right:0}
+
+/* A variation row carries the same control as a simple product's row, so the
+   column reads as one list of orderable lines. */
+.beltoft-loop-variable{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+/* Matched to Woo's own loop button, measured in the browser rather than
+   guessed: Bricks serves its CSS from the retail host, so it is cross-origin
+   to this page and the rules that style a.button[data-product_id] cannot be
+   inherited or even enumerated here. These are those computed values. */
+.beltoft-loop-variable__add{
+	white-space:nowrap;
+	background:#264F37;color:#fff;
+	padding:7px 20px;font-size:14px;line-height:23.8px;
+	text-transform:uppercase;text-decoration:none;border:0;
+}
+.beltoft-loop-variable__add:hover,
+.beltoft-loop-variable__add:focus{background:#1d3d2a;color:#fff}
+
+/* Sold out: same geometry, drained of colour, nothing to click. */
+.beltoft-loop-variable--sold-out .beltoft-loop-qty{opacity:.45}
+.beltoft-loop-variable--sold-out .beltoft-loop-qty__step{cursor:default;color:#8a8f8b}
+.beltoft-loop-variable__add--sold-out,
+.beltoft-loop-variable__add--sold-out:hover{
+	background:#eceeea;color:#8a8f8b;cursor:default;pointer-events:none;
+}
+.beltoft-loop-variable__add[disabled],.beltoft-loop-variable__add.is-busy{opacity:.6;pointer-events:none}
+
+/* The label changes twice while a line is added: Woo's own script first, then
+   Bricks swaps it to "Adicionado" and appends a "Ver carrinho" link on the
+   added_to_cart event. Both are useful signals and neither should move the
+   row. The width is reserved for the LONGEST state, so every label fits the
+   same box, and the in-flight state is a spinner rather than a resize. */
+/* Bricks styles these as `.brxe-<parent> .brxe-<id>.brxe-product-add-to-cart
+   a.button[data-product_id]`, so matching that shape is what it takes to
+   settle the height; a plainer selector loses and the two button kinds sat
+   2px apart. */
+.brxe-b59c51.brxe-product-add-to-cart a.button[data-product_id],
+.brxe-product-add-to-cart .button,.beltoft-loop-variable__add{
+	/* 40px, not 38: something in the theme stack sets min-height:40px on Woo's
+	   own loop button, and min-height beats height, so `height:38px` was
+	   silently ignored on that one and honoured on ours - which is exactly the
+	   2px the two buttons differed by. Matching the value the theme already
+	   uses settles it without an !important fight over a property that was
+	   never the one deciding. */
+	/* Sized to the quantity control beside it (32px), and fixed rather than
+	   min-width so the three labels this button cycles through - Adicionar,
+	   the in-flight one, Adicionado - cannot change its width. min-height is
+	   set too: the theme puts min-height:40px on Woo's loop button and
+	   min-height beats height. */
+	width:132px;min-width:132px;height:32px;min-height:32px;padding:0 12px;
+	display:inline-flex;align-items:center;justify-content:center;
+	text-align:center;position:relative;
+}
+/* The cart is open on this page, a couple of hundred pixels to the right, so
+   a per-row link to it buys nothing and reflows the row when it appears. */
+.brxe-product-add-to-cart .added_to_cart{display:none}
+.brxe-product-add-to-cart .button.loading,
+.beltoft-loop-variable__add.is-busy{color:transparent !important}
+.brxe-product-add-to-cart .button.loading::after,
+.beltoft-loop-variable__add.is-busy::after{
+	content:"";position:absolute;inset:0;margin:auto;width:15px;height:15px;
+	border:2px solid currentColor;border-top-color:transparent;border-radius:50%;
+	color:#fff;animation:beltoft-spin .6s linear infinite;
+}
+@keyframes beltoft-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+	.brxe-product-add-to-cart .button.loading::after,
+	.beltoft-loop-variable__add.is-busy::after{animation:none}
+}
+
+/* Live stock message, in the row rather than as a popup somewhere else. */
+.beltoft-loop-note{
+	flex:1 0 100%;margin-top:4px;font-size:12px;line-height:1.35;color:#a3402f;
+}
+.beltoft-loop-note--ok{color:#5d6b60}

@@ -37,6 +37,12 @@ class Plugin {
 		Checkout\Counter::register();
 		Checkout\Refresh::register();
 		Catalog\AddToCart::register();
+		Catalog\VariationRows::register();
+		Catalog\LoopQuantity::register();
+		Catalog\AddToCartUrl::register();
+		Catalog\CartNewestFirst::register();
+		Catalog\FilterCounts::register();
+		Catalog\RelevanssiSearch::register();
 		Stock\Pool::register();
 		Stock\AdminField::register();
 		Stock\Recount::register();
