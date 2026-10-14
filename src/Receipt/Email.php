@@ -2,6 +2,7 @@
 
 namespace BeltoftPos\Receipt;
 
+use BeltoftPos\Support\Host;
 use BeltoftPos\Support\Options;
 use BeltoftPos\Support\Till;
 use WP_Error;
@@ -59,7 +60,8 @@ class Email {
 	 * @return true|WP_Error
 	 */
 	public static function send( int $order_id, string $email, $user ) {
-		if ( ! Till::is_till_user( $user ) ) {
+		// From the till only - the form exists nowhere else.
+		if ( ! Host::is_pos_host() || ! Till::is_till_user( $user ) ) {
 			return new WP_Error( 'beltoft_pos_forbidden', __( 'This account has no access to the till.', 'beltoft-pos' ) );
 		}
 

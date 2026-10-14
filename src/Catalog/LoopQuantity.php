@@ -60,25 +60,9 @@ class LoopQuantity {
 		}
 
 		/*
-		 * A variable product's loop button is a link to the product page,
-		 * because WooCommerce cannot know which variation is wanted. For a
-		 * reorder list that is a dead end: the buyer leaves the list, chooses,
-		 * comes back and finds their place again, twice per line. Instead the
-		 * variations are offered inline and the chosen one is added directly.
-		 *
-		 * CHECKED BEFORE is_purchasable(), and that order is the whole reason
-		 * this works. WC_Product_Variable::is_purchasable() asks about the
-		 * PARENT, which under group pricing has no price of its own, so every
-		 * variable product answers false and would be skipped here. Whether a
-		 * variable product can be bought is a question about its children -
-		 * which is exactly what CatalogAudience::can_purchase() does too, and
-		 * what variable_controls() re-checks per variation.
-		 */
-		/*
-		 * A variable PARENT only still has a row when Frontend\VariationRows
-		 * found nothing in it this buyer may order - it could not expand the
-		 * parent into variation rows. Woo's own "choose an option" link is the
-		 * honest control there, so leave it alone.
+		 * A variable PARENT only still has a row when VariationRows found no
+		 * variation in it that can be sold. Woo's own "choose an option" link
+		 * is the honest control there, so leave it alone.
 		 */
 		if ( $product->is_type( 'variable' ) ) {
 			return $html;
@@ -136,18 +120,6 @@ class LoopQuantity {
 	}
 
 	/**
-	 * Select a variation, set a quantity, add it - without leaving the row.
-	 *
-	 * ONLY VARIATIONS THE VIEWER CAN ACTUALLY BUY are listed. `is_purchasable()`
-	 * on a variation runs the same fail-closed group-price rule as everything
-	 * else, so a variation priced for retail and not for this buyer's group
-	 * never appears in their dropdown - the list cannot offer something the
-	 * cart would then refuse.
-	 *
-	 * A single purchasable variation renders no dropdown at all: choosing from
-	 * a list of one is a question with no information in it.
-	 */
-	/**
 	 * The same shape as an orderable line, with nothing to operate.
 	 *
 	 * `aria-disabled` and `tabindex="-1"` rather than a `disabled` attribute:
@@ -195,35 +167,6 @@ class LoopQuantity {
 	}
 
 	/**
-	 * The list's ordering control for one product outside the list - the quick
-	 * view - as the {beltoft_buy} dynamic tag.
-	 *
-	 * Bricks' add-to-cart element renders the single-product form there, which
-	 * is a different design and, for a variation, nothing at all (Woo has no
-	 * `woocommerce_variation_add_to_cart` template). The quick view is opened
-	 * from a list row, so it offers exactly the control that row has: the same
-	 * stepper, the same button, the same stock cap and the same handler, which
-	 * works for a simple product as well as a variation because
-	 * WC_AJAX::add_to_cart takes either id. A variable parent gets nothing - it
-	 * has no single thing to add.
-	 */
-	public static function buy_control( \WC_Product $product ): string {
-		if ( ! self::applies() || $product->is_type( 'variable' ) ) {
-			return '';
-		}
-
-		if ( ! $product->is_in_stock() ) {
-			return self::sold_out( $product );
-		}
-
-		if ( ! $product->is_purchasable() || ! $product->is_type( array( 'simple', 'variation' ) ) ) {
-			return '';
-		}
-
-		return self::line_control( $product );
-	}
-
-	/**
 	 * The stepper markup, shared by the simple and variation paths so the two
 	 * cannot drift into looking like different controls.
 	 */
@@ -248,16 +191,6 @@ class LoopQuantity {
 			esc_attr__( 'Increase quantity', 'beltoft-pos' )
 		);
 	}
-
-	/**
-	 * Carry the typed quantity into the button WooCommerce already wired up.
-	 *
-	 * WooCommerce's AJAX add-to-cart reads data-quantity off the button, so the
-	 * whole job is to keep that attribute in step with the input. Doing it on
-	 * input rather than on click means the value is already correct whichever
-	 * way the button is activated - mouse, keyboard or an Enter press that
-	 * follows the browser's own form handling.
-	 */
 
 	/**
 	 * The control's script, on the till page only. Its styles are Bricks: the

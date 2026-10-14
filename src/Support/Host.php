@@ -45,6 +45,7 @@ class Host {
 	}
 
 	private static function normalise( string $host ): string {
-		return explode( ':', strtolower( trim( $host ) ) )[0];
+		// A fully qualified name may end in a dot ("pos.example.com.").
+		return rtrim( explode( ':', strtolower( trim( $host ) ) )[0], '.' );
 	}
 }

@@ -1,5 +1,5 @@
-/* Till product list - quantity steppers and variation-row add, as on the B2B list
-   (ported from beltoft-commerce Frontend\LoopQuantity). */
+/* Till product list - quantity steppers and variation-row add, as on the B2B
+   list. Keeps each row's add button carrying the typed quantity. */
 (function(){
 	var i18n=(window.beltoftPosList&&window.beltoftPosList.i18n)||{onlyInStock:'Only %d in stock.',couldNotAddCap:'Could not add. Only %d in stock.',couldNotAdd:'Could not add this line.'};
 	function sync(input){

@@ -88,8 +88,8 @@ class VariationRows {
 
 		/*
 		 * Relevanssi indexes a variation's SKU and GTIN against its PARENT
-		 * (the site-wide index; beltoft-commerce's VariationCodes adds them -
-		 * without it, variation codes are found by the scanner only). So searching one variation's code matches the parent, and
+		 * when the site's search index carries them; where it does not,
+		 * variation codes are found by the scanner only). So searching one variation's code matches the parent, and
 		 * expanding it would answer a scan of one barcode with every sibling.
 		 * When the term names a specific variation, only that one is shown.
 		 */

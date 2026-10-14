@@ -23,6 +23,7 @@ class PosHostTest extends WP_UnitTestCase {
 		$_SERVER['HTTP_HOST'] = 'POS.Staging.MindTheTrash.pt:443';
 		$this->assertTrue( Host::is_pos_host() );
 		$this->assertTrue( Host::is_pos_host( 'pos.staging.mindthetrash.pt:8080' ) );
+		$this->assertTrue( Host::is_pos_host( 'pos.staging.mindthetrash.pt.' ), 'A fully qualified name ends in a dot.' );
 	}
 
 	public function test_other_hosts_and_no_host_are_not_the_till() {

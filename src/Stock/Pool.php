@@ -78,6 +78,19 @@ class Pool {
 		 */
 		add_filter( 'woocommerce_order_hold_stock_minutes', array( __CLASS__, 'no_hold' ), 10, 2 );
 
+		/*
+		 * Stand aside while a product is saved. WC_Product::save() recomputes
+		 * `_stock_status` in validate_props() through the same getters, so a
+		 * save during a till request would write the till's count into the
+		 * shop's status. There is no hook before that call; the earliest is
+		 * just after it, before the database write - so the status is
+		 * recomputed there with the till's filters out of the way.
+		 */
+		add_action( 'woocommerce_before_product_object_save', array( __CLASS__, 'saving' ) );
+		add_action( 'woocommerce_before_product_variation_object_save', array( __CLASS__, 'saving' ) );
+		add_action( 'woocommerce_after_product_object_save', array( __CLASS__, 'saved' ) );
+		add_action( 'woocommerce_after_product_variation_object_save', array( __CLASS__, 'saved' ) );
+
 		// Read side.
 		foreach ( array( 'product', 'product_variation' ) as $type ) {
 			add_filter( "woocommerce_{$type}_get_stock_quantity", array( __CLASS__, 'quantity' ), 10, 2 );
@@ -129,9 +142,25 @@ class Pool {
 
 	/* ------------------------------------------------------------ read side */
 
-	/** Whether this request reads the till's shelf. */
+	private static int $saving = 0;
+
+	/** @param mixed $product */
+	public static function saving( $product = null ): void {
+		++self::$saving;
+
+		// Only a till session's getters differ from the shop's.
+		if ( $product instanceof WC_Product && Till::is_session() ) {
+			$product->validate_props();
+		}
+	}
+
+	public static function saved(): void {
+		self::$saving = max( 0, self::$saving - 1 );
+	}
+
+	/** Whether this request reads the till's shelf (not while a product is being saved). */
 	private static function pool(): bool {
-		return Till::is_session();
+		return 0 === self::$saving && Till::is_session();
 	}
 
 	/**

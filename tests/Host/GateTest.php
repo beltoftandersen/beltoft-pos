@@ -94,6 +94,17 @@ class PosGateTest extends WP_UnitTestCase {
 		remove_action( 'wp_logout', 'ps_redirect_after_logout' );
 	}
 
+	/** WooCommerce handles these on wp_loaded, before any page gate: they are gated there too. */
+	public function test_cart_and_checkout_form_actions_need_a_till_user() {
+		foreach ( array( array( 'add-to-cart' => '5' ), array( 'remove_item' => 'x' ), array( 'woocommerce-process-checkout-nonce' => 'n' ), array( 'order_again' => '9' ) ) as $request ) {
+			$this->assertTrue( Gate::form_action_blocked( $request, null ), key( $request ) );
+			$this->assertTrue( Gate::form_action_blocked( $request, $this->customer ), key( $request ) );
+			$this->assertFalse( Gate::form_action_blocked( $request, $this->operator ), key( $request ) );
+		}
+
+		$this->assertFalse( Gate::form_action_blocked( array( 'refused' => '1' ), null ), 'Not a cart action.' );
+	}
+
 	public function test_api_calls() {
 		$this->assertSame( 401, Gate::api_status( null ) );
 		$this->assertSame( 401, Gate::api_status( new WP_User( 0 ) ) );

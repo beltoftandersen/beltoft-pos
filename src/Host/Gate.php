@@ -58,6 +58,12 @@ class Gate {
 	 */
 	private const LOGIN_ACTIONS = array( 'login', 'lostpassword', 'retrievepassword', 'rp', 'resetpass', 'logout' );
 
+	/**
+	 * Request keys WooCommerce acts on during wp_loaded - before any page gate
+	 * runs - to change a cart or place an order.
+	 */
+	private const FORM_ACTIONS = array( 'add-to-cart', 'remove_item', 'undo_item', 'update_cart', 'apply_coupon', 'order_again', 'woocommerce-process-checkout-nonce', 'woocommerce-pay-nonce' );
+
 	/** The login page's own form submits through admin-ajax while logged out. */
 	private const OPEN_AJAX = array( 'bricks_form_submit' );
 
@@ -70,6 +76,7 @@ class Gate {
 		 * The user is already known on init.
 		 */
 		add_action( 'init', array( __CLASS__, 'guard_wc_ajax' ), 1 );
+		add_action( 'wp_loaded', array( __CLASS__, 'guard_forms' ), 1 );
 		add_action( 'admin_init', array( __CLASS__, 'guard_admin' ), 1 );
 
 		// After core's cookie check (100), which may still reset the user.
@@ -124,6 +131,27 @@ class Gate {
 			&& ! user_can( $user, 'manage_woocommerce' );
 
 		return $operator ? self::TO_POS : self::ALLOW;
+	}
+
+	/** Whether a cart/checkout form action in $request must be refused for $user. */
+	public static function form_action_blocked( array $request, ?WP_User $user ): bool {
+		if ( ! array_intersect( array_keys( $request ), self::FORM_ACTIONS ) ) {
+			return false;
+		}
+
+		return 0 !== self::api_status( $user );
+	}
+
+	public static function guard_forms(): void {
+		if ( ! Host::is_pos_host() || wp_doing_ajax() || is_admin() ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only the keys are read, to refuse.
+		if ( self::form_action_blocked( (array) $_REQUEST, wp_get_current_user() ) ) {
+			wp_safe_redirect( Options::login_url(), 302 );
+			exit;
+		}
 	}
 
 	public static function api_status( ?WP_User $user ): int {

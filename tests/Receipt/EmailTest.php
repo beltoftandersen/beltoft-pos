@@ -11,7 +11,21 @@ class PosReceiptEmailTest extends WP_UnitTestCase {
 	public function setUp(): void {
 		parent::setUp();
 		reset_phpmailer_instance();
+		$_SERVER['HTTP_HOST'] = \BeltoftPos\Support\Host::name();
 		$this->operator = get_user_by( 'id', self::factory()->user->create( array( 'role' => 'pos_operator' ) ) );
+	}
+
+	public function tearDown(): void {
+		unset( $_SERVER['HTTP_HOST'] );
+		parent::tearDown();
+	}
+
+	public function test_receipts_are_sent_from_the_till_only() {
+		$order = $this->sale( Options::walkin_email() );
+		$_SERVER['HTTP_HOST'] = 'example.org';
+
+		$this->assertSame( 'beltoft_pos_forbidden', Email::send( $order->get_id(), 'a@example.test', $this->operator )->get_error_code() );
+		$this->assertSame( array(), $this->sent_to() );
 	}
 
 	private function sale( string $email ): WC_Order {

@@ -16,8 +16,9 @@ defined( 'ABSPATH' ) || exit;
  * to know.
  *
  * Exceptions, each for a reason:
- * - wp-admin goes to retail, where staff are signed in to edit; admin-ajax.php
- *   and admin-post.php stay here because the till's own forms post to them.
+ * - wp-admin goes to retail, where staff are signed in to edit - admin-post.php
+ *   included, as Host\Gate sends it there too. admin-ajax.php stays here:
+ *   the till's own forms (login, receipt email) post to it.
  * - Action Scheduler runs queued jobs at the end of whatever request happens
  *   to trigger it; a job must not inherit the till's host by accident.
  * - Emails sent during a till request link to retail: the customer reading
@@ -75,7 +76,7 @@ class Urls {
 			return $url;
 		}
 
-		if ( false !== strpos( $url, 'admin-ajax.php' ) || false !== strpos( $url, 'admin-post.php' ) ) {
+		if ( false !== strpos( $url, 'admin-ajax.php' ) ) {
 			return $url;
 		}
 

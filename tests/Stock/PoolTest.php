@@ -96,6 +96,22 @@ class PosPoolTest extends WP_UnitTestCase {
 		$this->assertTrue( $this->fresh()->is_in_stock() );
 	}
 
+	/** Saving a product during a till request must not write the till's count into retail stock status. */
+	public function test_a_product_saved_at_the_till_keeps_its_retail_stock_status() {
+		$p = $this->fresh();
+		$p->set_stock_quantity( 0 );
+		$p->set_backorders( 'no' );
+		$p->save();
+		$this->assertSame( 'outofstock', get_post_meta( $this->product, '_stock_status', true ) );
+
+		$_SERVER['HTTP_HOST'] = Host::name();
+		wp_set_current_user( $this->operator );
+		wc_get_product( $this->product )->save();
+
+		$this->assertSame( 'outofstock', get_post_meta( $this->product, '_stock_status', true ), 'Not "instock" from the shelf of 3.' );
+		$this->assertSame( 3, $this->fresh()->get_stock_quantity(), 'Reading at the till still sees the shelf.' );
+	}
+
 	public function test_a_till_sale_moves_the_shelf_and_never_the_warehouse() {
 		$this->assertFalse( Pool::divert_reduce( true, $this->sale( 2 ) ) );
 

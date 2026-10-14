@@ -37,6 +37,7 @@ class PosUrlsTest extends WP_UnitTestCase {
 
 		$this->assertStringStartsWith( 'http://example.org/wp-admin/', admin_url( 'options.php' ) );
 		$this->assertStringContainsString( '//pos.staging.mindthetrash.pt/wp-admin/admin-ajax.php', admin_url( 'admin-ajax.php' ), 'Scheme follows is_ssl().' );
+		$this->assertStringStartsWith( 'http://example.org/wp-admin/admin-post.php', admin_url( 'admin-post.php' ), 'Like the rest of wp-admin: the gate sends it to retail.' );
 	}
 
 	public function test_background_jobs_never_get_the_pos_host() {
