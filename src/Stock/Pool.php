@@ -42,6 +42,13 @@ class Pool {
 	/** The till's shelf count. The key predates this plugin; existing counts carry over as they are. */
 	public const META = '_stock_group_pos';
 
+	/**
+	 * On each order line: how many units this sale has taken off the till's
+	 * shelf and not yet put back - the till's own `_reduced_stock`. Refunds
+	 * and cancellations restore from it, so no unit goes back twice.
+	 */
+	public const LINE_REDUCED = '_beltoft_pos_reduced';
+
 	public static function register(): void {
 		/*
 		 * Mark a till sale while there is still a
@@ -277,9 +284,12 @@ class Pool {
 		}
 
 		foreach ( $order->get_items() as $item_id => $item ) {
-			$qty = abs( (int) ( $refunded_line_items[ $item_id ]['qty'] ?? 0 ) );
+			$qty     = abs( (int) ( $refunded_line_items[ $item_id ]['qty'] ?? 0 ) );
+			$reduced = $item->get_meta( self::LINE_REDUCED, true );
 
-			if ( ! $qty || ! is_callable( array( $item, 'get_product' ) ) ) {
+			// Nothing was taken off the shelf for this line (never reduced, or
+			// already put back by a cancellation): nothing to put back.
+			if ( ! $qty || '' === $reduced || (int) $reduced <= 0 || ! is_callable( array( $item, 'get_product' ) ) ) {
 				continue;
 			}
 
@@ -290,7 +300,11 @@ class Pool {
 				continue;
 			}
 
-			self::move( $product->get_id(), $qty );
+			$back = min( $qty, (int) $reduced );
+
+			self::move( $product->get_id(), $back );
+			$item->update_meta_data( self::LINE_REDUCED, (int) $reduced - $back );
+			$item->save();
 		}
 
 		// WooCommerce must not also put it back in the shared pool.
@@ -329,7 +343,25 @@ class Pool {
 				continue;
 			}
 
-			self::move( $id, $sign * (int) $item->get_quantity() );
+			if ( $sign < 0 ) {
+				self::move( $id, -(int) $item->get_quantity() );
+				$item->update_meta_data( self::LINE_REDUCED, (int) $item->get_quantity() );
+				$item->save();
+
+				continue;
+			}
+
+			/*
+			 * Restore what is still off the shelf - less anything a refund has
+			 * already put back. A line from before this was recorded restores
+			 * its full quantity, as it always did.
+			 */
+			$reduced = $item->get_meta( self::LINE_REDUCED, true );
+			$back    = '' === $reduced ? (int) $item->get_quantity() : max( 0, (int) $reduced );
+
+			self::move( $id, $back );
+			$item->delete_meta_data( self::LINE_REDUCED );
+			$item->save();
 		}
 
 		// WooCommerce must not also touch the shared pool for this order.

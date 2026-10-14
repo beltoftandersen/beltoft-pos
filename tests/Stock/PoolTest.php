@@ -137,6 +137,47 @@ class PosPoolTest extends WP_UnitTestCase {
 		$this->assertSame( '40', (string) get_post_meta( $this->product, '_stock', true ) );
 	}
 
+	private function refund( WC_Order $order, int $qty ): void {
+		$item_id = array_key_first( wc_get_order( $order->get_id() )->get_items() );
+		wc_create_refund( array(
+			'order_id'      => $order->get_id(),
+			'amount'        => 0,
+			'line_items'    => array( $item_id => array( 'qty' => $qty, 'refund_total' => 0 ) ),
+			'restock_items' => true,
+		) );
+	}
+
+	/** Each unit goes back once: what a refund restocked, a cancel does not restock again. */
+	public function test_a_partly_refunded_then_cancelled_sale_restores_only_the_rest() {
+		$order = $this->sale( 3 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->assertSame( 0, $this->shelf() );
+
+		$this->refund( $order, 1 );
+		$this->assertSame( 1, $this->shelf() );
+
+		wc_maybe_increase_stock_levels( $order->get_id() );
+		$this->assertSame( 3, $this->shelf(), 'Not 4: the refunded unit was already back.' );
+	}
+
+	public function test_a_cancelled_then_refunded_sale_is_not_restocked_twice() {
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		wc_maybe_increase_stock_levels( $order->get_id() );
+		$this->assertSame( 3, $this->shelf() );
+
+		$this->refund( $order, 2 );
+		$this->assertSame( 3, $this->shelf() );
+	}
+
+	public function test_a_refund_of_a_sale_never_reduced_restocks_nothing() {
+		$order = $this->sale( 2 );
+
+		$this->refund( $order, 2 );
+
+		$this->assertSame( 3, $this->shelf() );
+	}
+
 	public function test_a_refunded_website_order_is_left_to_woocommerce() {
 		$this->assertTrue( Pool::divert_restock_refund( true, $this->sale( 2, false ), array() ) );
 	}
