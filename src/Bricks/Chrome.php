@@ -43,8 +43,14 @@ class Chrome {
 
 		$login = Options::login_page_id();
 
+		/*
+		 * "None" is 0, not a missing key: Bricks reads both keys on every page
+		 * (frontend.php, assets, setup) and an unset one logged an "Undefined
+		 * array key" warning per request; 0 fails its own empty()/> 0 checks.
+		 */
 		if ( $login && is_page( $login ) ) {
-			unset( $active_templates['header'], $active_templates['footer'] );
+			$active_templates['header'] = 0;
+			$active_templates['footer'] = 0;
 
 			return $active_templates;
 		}
@@ -53,7 +59,7 @@ class Chrome {
 
 		if ( $header ) {
 			$active_templates['header'] = $header;
-			unset( $active_templates['footer'] );
+			$active_templates['footer'] = 0;
 		}
 
 		return $active_templates;

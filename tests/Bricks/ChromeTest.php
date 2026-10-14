@@ -33,7 +33,7 @@ class PosChromeTest extends WP_UnitTestCase {
 		$out = Chrome::choose( $this->retail() );
 
 		$this->assertSame( $this->header, $out['header'] );
-		$this->assertArrayNotHasKey( 'footer', $out, 'No footer template: the till ends with the counter.' );
+		$this->assertSame( 0, $out['footer'], 'No footer template: the till ends with the counter. 0, not unset - Bricks reads the key.' );
 		$this->assertSame( 33, $out['content'] );
 	}
 
@@ -43,8 +43,8 @@ class PosChromeTest extends WP_UnitTestCase {
 
 		$out = Chrome::choose( $this->retail() );
 
-		$this->assertArrayNotHasKey( 'header', $out );
-		$this->assertArrayNotHasKey( 'footer', $out );
+		$this->assertSame( 0, $out['header'] );
+		$this->assertSame( 0, $out['footer'] );
 	}
 
 	public function test_without_its_template_the_till_falls_back_to_the_shop_header() {
