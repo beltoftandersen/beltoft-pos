@@ -19,12 +19,26 @@ class PosPageTest extends WP_UnitTestCase {
 		parent::tearDown();
 	}
 
-	public function test_on_the_pos_host_the_pos_page_is_checkout_cart_and_front() {
+	public function test_on_the_pos_host_the_pos_page_is_the_checkout() {
 		$_SERVER['HTTP_HOST'] = Host::name();
 
 		$this->assertSame( $this->pos, Page::page_id( 123 ) );
-		$this->assertSame( 'page', Page::show_on_front( 'posts' ) );
-		$this->assertSame( $this->pos, Page::page_on_front( 29 ) );
+	}
+
+	/**
+	 * '/' sends the till to its page rather than making the page the front
+	 * page: WooCommerce's endpoint rewrite rules are built from the retail
+	 * settings, so /encomenda-recebida/<id>/ would 404 at the site root.
+	 */
+	public function test_the_root_of_the_pos_host_leads_to_the_till() {
+		$_SERVER['HTTP_HOST'] = Host::name();
+
+		$this->assertSame( get_permalink( $this->pos ), Page::front_target( '/' ) );
+		$this->assertSame( get_permalink( $this->pos ), Page::front_target( '' ) );
+		$this->assertNull( Page::front_target( '/caixa/' ) );
+
+		$_SERVER['HTTP_HOST'] = 'example.org';
+		$this->assertNull( Page::front_target( '/' ), 'Retail keeps its home page.' );
 	}
 
 	public function test_through_woocommerce_itself() {
@@ -52,8 +66,6 @@ class PosPageTest extends WP_UnitTestCase {
 		$_SERVER['HTTP_HOST'] = 'example.org';
 
 		$this->assertSame( 123, Page::page_id( 123 ) );
-		$this->assertSame( 'posts', Page::show_on_front( 'posts' ) );
-		$this->assertSame( 29, Page::page_on_front( 29 ) );
 	}
 
 	/** A missing page must fall back to WooCommerce's, not a 404 with a full cart. */
@@ -62,7 +74,6 @@ class PosPageTest extends WP_UnitTestCase {
 		$_SERVER['HTTP_HOST'] = Host::name();
 
 		$this->assertSame( 123, Page::page_id( 123 ) );
-		$this->assertSame( 29, Page::page_on_front( 29 ) );
-		$this->assertSame( 'posts', Page::show_on_front( 'posts' ) );
+		$this->assertNull( Page::front_target( '/' ) );
 	}
 }

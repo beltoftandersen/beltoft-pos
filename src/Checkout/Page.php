@@ -8,7 +8,12 @@ use BeltoftPos\Support\Options;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * On the POS host, the POS page is WooCommerce's checkout and the front page.
+ * On the POS host, the POS page is WooCommerce's checkout, and '/' leads to it.
+ *
+ * NOT THE FRONT PAGE. WooCommerce builds its endpoint rewrite rules from the
+ * stored settings - retail's - so they exist under pages only; with the till
+ * as the front page the receipt (/encomenda-recebida/<id>/) would 404. The
+ * till stays at its own path and the root redirects there.
  *
  * WHY THE PAGE ID IS FILTERED rather than the URL. `wc_get_page_id()` runs its
  * option through `woocommerce_get_{page}_page_id`, and everything downstream
@@ -30,9 +35,8 @@ class Page {
 		add_filter( 'woocommerce_get_checkout_page_id', array( __CLASS__, 'page_id' ) );
 		add_filter( 'woocommerce_get_cart_url', array( __CLASS__, 'cart_url' ) );
 		add_filter( 'woocommerce_checkout_redirect_empty_cart', array( __CLASS__, 'keep_empty_checkout' ) );
-		add_filter( 'option_show_on_front', array( __CLASS__, 'show_on_front' ) );
-		add_filter( 'option_page_on_front', array( __CLASS__, 'page_on_front' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'not_configured' ), 2 );
+		add_action( 'template_redirect', array( __CLASS__, 'to_the_till' ), 3 );
 		add_action( 'admin_notices', array( __CLASS__, 'admin_notice' ) );
 	}
 
@@ -66,24 +70,24 @@ class Page {
 		return Host::is_pos_host() ? false : $redirect;
 	}
 
-	/**
-	 * @param mixed $value
-	 * @return mixed
-	 */
-	public static function show_on_front( $value ) {
-		return Host::is_pos_host() && Options::page_id() ? 'page' : $value;
-	}
+	/** Where a request for this path goes instead: the till, for the POS host's root. */
+	public static function front_target( string $path ): ?string {
+		$page = Options::page_id();
 
-	/**
-	 * @param mixed $value
-	 * @return mixed
-	 */
-	public static function page_on_front( $value ) {
-		if ( ! Host::is_pos_host() ) {
-			return $value;
+		if ( ! $page || ! Host::is_pos_host() || '' !== trim( $path, '/' ) ) {
+			return null;
 		}
 
-		return Options::page_id() ?: $value;
+		return get_permalink( $page );
+	}
+
+	public static function to_the_till(): void {
+		$target = self::front_target( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '/' ), PHP_URL_PATH ) );
+
+		if ( null !== $target ) {
+			wp_safe_redirect( $target, 302 );
+			exit;
+		}
 	}
 
 	/** Signed in on the till with no till page: say so, plainly. */
