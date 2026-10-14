@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T15:48:30+00:00\n"
+"POT-Creation-Date: 2026-10-14T16:33:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: beltoft-pos\n"
@@ -35,38 +35,38 @@ msgstr ""
 msgid "The till has no header: publish a Bricks header template with the slug %s (no conditions)."
 msgstr ""
 
-#: src/Catalog/LoopQuantity.php:127
-#: src/Catalog/LoopQuantity.php:245
+#: src/Catalog/LoopQuantity.php:111
+#: src/Catalog/LoopQuantity.php:188
 msgid "Quantity"
 msgstr ""
 
-#: src/Catalog/LoopQuantity.php:131
-#: src/Catalog/LoopQuantity.php:247
+#: src/Catalog/LoopQuantity.php:115
+#: src/Catalog/LoopQuantity.php:190
 msgid "Decrease quantity"
 msgstr ""
 
-#: src/Catalog/LoopQuantity.php:132
-#: src/Catalog/LoopQuantity.php:248
+#: src/Catalog/LoopQuantity.php:116
+#: src/Catalog/LoopQuantity.php:191
 msgid "Increase quantity"
 msgstr ""
 
-#: src/Catalog/LoopQuantity.php:167
+#: src/Catalog/LoopQuantity.php:139
 msgid "Sold out"
 msgstr ""
 
 #. translators: %d: units in stock.
-#: src/Catalog/LoopQuantity.php:280
+#: src/Catalog/LoopQuantity.php:213
 #, php-format
 msgid "Only %d in stock."
 msgstr ""
 
 #. translators: %d: units in stock.
-#: src/Catalog/LoopQuantity.php:282
+#: src/Catalog/LoopQuantity.php:215
 #, php-format
 msgid "Could not add. Only %d in stock."
 msgstr ""
 
-#: src/Catalog/LoopQuantity.php:283
+#: src/Catalog/LoopQuantity.php:216
 msgid "Could not add this line."
 msgstr ""
 
@@ -108,40 +108,40 @@ msgstr ""
 msgid "Bank transfer"
 msgstr ""
 
-#: src/Host/Gate.php:316
+#: src/Host/Gate.php:344
 msgid "Please sign in to the till."
 msgstr ""
 
-#: src/Host/Gate.php:317
-#: src/Receipt/Email.php:63
+#: src/Host/Gate.php:345
+#: src/Receipt/Email.php:65
 msgid "This account has no access to the till."
 msgstr ""
 
-#: src/Plugin.php:63
+#: src/Plugin.php:62
 msgid "Beltoft POS needs WooCommerce."
 msgstr ""
 
 #. translators: %s: email address.
-#: src/Receipt/Email.php:51
+#: src/Receipt/Email.php:52
 #, php-format
 msgid "Receipt sent to %s."
 msgstr ""
 
-#: src/Receipt/Email.php:69
+#: src/Receipt/Email.php:71
 msgid "This order is not a till sale."
 msgstr ""
 
-#: src/Receipt/Email.php:75
+#: src/Receipt/Email.php:77
 msgid "Enter a valid email address."
 msgstr ""
 
 #. translators: %s: email address.
-#: src/Receipt/Email.php:85
+#: src/Receipt/Email.php:87
 #, php-format
 msgid "Receipt emailed to %s."
 msgstr ""
 
-#: src/Receipt/Email.php:91
+#: src/Receipt/Email.php:93
 msgid "The receipt could not be sent."
 msgstr ""
 
@@ -159,7 +159,7 @@ msgid "Counted separately from the shop stock above. Leave empty if it has never
 msgstr ""
 
 #. translators: 1: product id, 2: till stock before, 3: till stock after.
-#: src/Stock/Pool.php:192
+#: src/Stock/Pool.php:221
 #, php-format
 msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr ""

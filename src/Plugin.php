@@ -35,7 +35,6 @@ class Plugin {
 		Checkout\Tenders::register();
 		Checkout\PaymentMethods::register();
 		Checkout\Counter::register();
-		Checkout\Refresh::register();
 		Catalog\AddToCart::register();
 		Catalog\VariationRows::register();
 		Catalog\LoopQuantity::register();
