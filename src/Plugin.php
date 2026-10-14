@@ -40,6 +40,7 @@ class Plugin {
 		Stock\AdminField::register();
 		Stock\Recount::register();
 		Scanner\Context::register();
+		Receipt\Email::register();
 	}
 
 	public static function needs_woocommerce(): void {
