@@ -28,6 +28,8 @@ class Plugin {
 		}
 
 		add_action( 'init', array( Support\Installer::class, 'maybe_upgrade' ) );
+
+		Host\NoIndex::register();
 	}
 
 	public static function needs_woocommerce(): void {
