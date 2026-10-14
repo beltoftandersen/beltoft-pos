@@ -35,7 +35,21 @@ class Gate {
 	public const TO_POS = 'to_pos';
 
 	/** Served to anyone, because there is nothing behind them. */
-	private const OPEN_PATHS = array( '/robots.txt' );
+	private const OPEN_PATHS = array( '/robots.txt', '/favicon.ico' );
+
+	/**
+	 * Query vars that make WordPress serve something other than the path -
+	 * /caixa-entrar/?page_id=5 renders page 5. An open path carrying one of
+	 * these is not open (the same list as the B2B host's gate).
+	 */
+	private const CONTENT_VARS = array(
+		'p', 'page_id', 'pagename', 'name', 'attachment', 'attachment_id', 'subpost', 'subpost_id',
+		'preview', 'post_type', 'static', 'pb', 'embed',
+		's', 'cat', 'category_name', 'tag', 'tag_id', 'taxonomy', 'term', 'author', 'author_name',
+		'feed', 'm', 'year', 'monthnum', 'day', 'w', 'sitemap', 'post_format',
+		'product', 'product_cat', 'product_tag', 'product_brand',
+		'rest_route', 'wc-ajax',
+	);
 
 	/**
 	 * wp-login.php screens that stay open on the POS host. Sign-in among them:
@@ -72,7 +86,7 @@ class Gate {
 		 */
 	}
 
-	public static function decide( string $path, ?WP_User $user ): string {
+	public static function decide( string $path, ?WP_User $user, array $query = array() ): string {
 		$path     = self::normalise( $path );
 		$on_login = $path === Options::login_path();
 
@@ -82,6 +96,10 @@ class Gate {
 			}
 
 			return $on_login ? self::HOME : self::ALLOW;
+		}
+
+		if ( array_intersect( array_keys( $query ), self::CONTENT_VARS ) ) {
+			return self::LOGIN;
 		}
 
 		if ( $on_login || in_array( untrailingslashit( $path ), self::OPEN_PATHS, true ) ) {
@@ -137,7 +155,10 @@ class Gate {
 			return;
 		}
 
-		switch ( self::decide( $path, $user ) ) {
+		$query = array();
+		parse_str( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_QUERY ), $query );
+
+		switch ( self::decide( $path, $user, $query ) ) {
 			case self::LOGIN:
 				wp_safe_redirect( Options::login_url(), 302 );
 				exit;

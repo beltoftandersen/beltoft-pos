@@ -31,6 +31,19 @@ class PosGateTest extends WP_UnitTestCase {
 		$this->assertSame( Gate::LOGIN, Gate::decide( '/caixa-entrar-falso/', null ), 'A prefix is not the page.' );
 	}
 
+	public function test_favicon_is_public() {
+		$this->assertSame( Gate::ALLOW, Gate::decide( '/favicon.ico', null ) );
+	}
+
+	/** As on the B2B host: an open path may not be used to select other content. */
+	public function test_the_login_page_cannot_be_used_to_reach_other_content() {
+		$this->assertSame( Gate::ALLOW, Gate::decide( '/caixa-entrar/', null, array( 'refused' => '1' ) ) );
+		$this->assertSame( Gate::LOGIN, Gate::decide( '/caixa-entrar/', null, array( 'page_id' => '5' ) ) );
+		$this->assertSame( Gate::LOGIN, Gate::decide( '/caixa-entrar/', null, array( 'p' => '5' ) ) );
+		$this->assertSame( Gate::LOGIN, Gate::decide( '/caixa-entrar/', null, array( 'rest_route' => '/wc/store/v1/cart' ) ) );
+		$this->assertSame( Gate::LOGIN, Gate::decide( '/robots.txt', null, array( 's' => 'x' ) ) );
+	}
+
 	public function test_till_users_get_in_and_skip_the_login_page() {
 		$this->assertSame( Gate::ALLOW, Gate::decide( '/', $this->operator ) );
 		$this->assertSame( Gate::ALLOW, Gate::decide( '/caixa/', $this->manager ) );
