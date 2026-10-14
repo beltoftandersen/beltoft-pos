@@ -1,0 +1,134 @@
+# Copyright (C) 2026 beltoft.net
+# This file is distributed under the same license as the Beltoft POS plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Beltoft POS 0.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-pos\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-14T10:38:04+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: beltoft-pos\n"
+
+#. Plugin Name of the plugin
+#: beltoft-pos.php
+msgid "Beltoft POS"
+msgstr ""
+
+#. Description of the plugin
+#: beltoft-pos.php
+msgid "Point of sale for the shop counter: its own host, login, product list and checkout."
+msgstr ""
+
+#. Author of the plugin
+#: beltoft-pos.php
+msgid "beltoft.net"
+msgstr ""
+
+#: src/Checkout/Page.php:99
+msgid "Till not set up."
+msgstr ""
+
+#: src/Checkout/Page.php:115
+msgid "The till has no page yet. Publish the POS page and set its ID in the option beltoft_pos_page_id."
+msgstr ""
+
+#: src/Checkout/Tender.php:41
+msgid "Records how a counter sale was paid. No payment is processed."
+msgstr ""
+
+#: src/Checkout/Tender.php:67
+msgid "This payment method is only available at the till."
+msgstr ""
+
+#. translators: %s: the tender, e.g. Cash.
+#: src/Checkout/Tender.php:75
+#, php-format
+msgid "Counter sale paid: %s"
+msgstr ""
+
+#: src/Checkout/Tenders.php:19
+msgid "MB WAY"
+msgstr ""
+
+#: src/Checkout/Tenders.php:20
+msgid "Card (Teya)"
+msgstr ""
+
+#: src/Checkout/Tenders.php:21
+msgid "Cash"
+msgstr ""
+
+#: src/Checkout/Tenders.php:22
+msgid "Bank transfer"
+msgstr ""
+
+#: src/Host/Gate.php:284
+msgid "Please sign in to the till."
+msgstr ""
+
+#: src/Host/Gate.php:285
+#: src/Receipt/Email.php:63
+msgid "This account has no access to the till."
+msgstr ""
+
+#: src/Plugin.php:53
+msgid "Beltoft POS needs WooCommerce."
+msgstr ""
+
+#. translators: %s: email address.
+#: src/Receipt/Email.php:51
+#, php-format
+msgid "Receipt sent to %s."
+msgstr ""
+
+#: src/Receipt/Email.php:69
+msgid "This order is not a till sale."
+msgstr ""
+
+#: src/Receipt/Email.php:75
+msgid "Enter a valid email address."
+msgstr ""
+
+#. translators: %s: email address.
+#: src/Receipt/Email.php:85
+#, php-format
+msgid "Receipt emailed to %s."
+msgstr ""
+
+#: src/Receipt/Email.php:91
+msgid "The receipt could not be sent."
+msgstr ""
+
+#: src/Stock/AdminField.php:35
+#: src/Stock/AdminField.php:63
+msgid "Till stock"
+msgstr ""
+
+#: src/Stock/AdminField.php:82
+msgid "Counted separately from the shop stock above. Leave empty if it has never been counted. The till never refuses a sale over this count, so it can go below zero."
+msgstr ""
+
+#. translators: %d: number of products whose till stock has gone below zero.
+#: src/Stock/Recount.php:113
+#, php-format
+msgid "%d product has sold past its counted till stock. The sales went through; the count needs correcting."
+msgid_plural "%d products have sold past their counted till stock. The sales went through; the counts need correcting."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Stock/Recount.php:123
+msgid "Show them"
+msgstr ""
+
+#: src/Support/Installer.php:26
+msgid "Till operator"
+msgstr ""
+
+#: src/Support/Options.php:46
+msgid "Walk-in customer"
+msgstr ""
