@@ -48,7 +48,9 @@ class Plugin {
 		Stock\Recount::register();
 		Scanner\Context::register();
 		Receipt\Email::register();
+		Receipt\Printing::register();
 		Bricks\Chrome::register();
+		Host\RetailAssets::register();
 	}
 
 	public static function needs_woocommerce(): void {
