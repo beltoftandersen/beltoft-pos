@@ -30,6 +30,7 @@ class Plugin {
 		add_action( 'init', array( Support\Installer::class, 'maybe_upgrade' ) );
 
 		Host\NoIndex::register();
+		Host\Gate::register();
 		Checkout\Page::register();
 	}
 
