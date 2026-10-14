@@ -19,16 +19,16 @@ class PosNoIndexTest extends WP_UnitTestCase {
 		$this->assertTrue( $robots['nofollow'] );
 		$this->assertArrayNotHasKey( 'max-image-preview', $robots );
 
-		$this->assertSame( "User-agent: *\nDisallow: /\n", NoIndex::robots_txt( 'whatever' ) );
+		$this->assertSame( "whatever\n\nUser-agent: *\nDisallow: /\n", NoIndex::robots_txt( 'whatever' ), 'Added to, never replaced.' );
 		$this->assertFalse( NoIndex::sitemaps( true ) );
 	}
 
-	/** Slim SEO rewrites robots.txt at 9999; the till's answer must be the last word. */
-	public function test_robots_txt_wins_over_later_seo_filters() {
+	/** Slim SEO writes robots.txt at 9999; its text stays and the till's block follows it. */
+	public function test_robots_txt_keeps_the_seo_text_and_adds_after_it() {
 		$_SERVER['HTTP_HOST'] = Host::name();
 		add_filter( 'robots_txt', fn() => 'Allow: /', 9999 );
 
-		$this->assertSame( "User-agent: *\nDisallow: /\n", apply_filters( 'robots_txt', '', true ) );
+		$this->assertSame( "Allow: /\n\nUser-agent: *\nDisallow: /\n", apply_filters( 'robots_txt', '', true ) );
 	}
 
 	public function test_other_hosts_are_untouched() {

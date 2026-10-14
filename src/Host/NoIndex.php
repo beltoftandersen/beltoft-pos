@@ -23,7 +23,7 @@ class NoIndex {
 	public static function register(): void {
 		add_action( 'send_headers', array( __CLASS__, 'headers' ) );
 		add_filter( 'wp_robots', array( __CLASS__, 'robots' ), 99 );
-		// Last: Slim SEO rewrites robots.txt at 9999.
+		// Last, after Slim SEO (9999) and zerolang (10000): added to, never replacing, their text.
 		add_filter( 'robots_txt', array( __CLASS__, 'robots_txt' ), PHP_INT_MAX );
 		add_filter( 'wp_sitemaps_enabled', array( __CLASS__, 'sitemaps' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'no_feeds' ), 0 );
@@ -61,11 +61,19 @@ class NoIndex {
 	}
 
 	/**
+	 * The SEO plugin's robots.txt stays as it is; the POS host adds one group
+	 * after it. Crawlers merge groups for the same user agent, so the
+	 * Disallow applies to the whole host.
+	 *
 	 * @param mixed $output
 	 * @return mixed
 	 */
 	public static function robots_txt( $output ) {
-		return Host::is_pos_host() ? "User-agent: *\nDisallow: /\n" : $output;
+		if ( ! is_string( $output ) || ! Host::is_pos_host() ) {
+			return $output;
+		}
+
+		return rtrim( $output ) . "\n\nUser-agent: *\nDisallow: /\n";
 	}
 
 	/**
