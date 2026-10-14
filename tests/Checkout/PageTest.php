@@ -62,6 +62,19 @@ class PosPageTest extends WP_UnitTestCase {
 		$this->assertTrue( Page::keep_empty_checkout( true ) );
 	}
 
+	/**
+	 * An empty till is where a sale starts. WooCommerce answers an order
+	 * review on an empty cart with "your session has expired" and replaces
+	 * the whole checkout form - which, on the till, is the side panel.
+	 */
+	public function test_an_empty_order_review_is_not_an_expired_session_at_the_till() {
+		$_SERVER['HTTP_HOST'] = Host::name();
+		$this->assertFalse( Page::keep_empty_review( true ) );
+
+		$_SERVER['HTTP_HOST'] = 'example.org';
+		$this->assertTrue( Page::keep_empty_review( true ) );
+	}
+
 	public function test_other_hosts_keep_their_pages() {
 		$_SERVER['HTTP_HOST'] = 'example.org';
 

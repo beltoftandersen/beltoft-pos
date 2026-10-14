@@ -35,6 +35,7 @@ class Page {
 		add_filter( 'woocommerce_get_checkout_page_id', array( __CLASS__, 'page_id' ) );
 		add_filter( 'woocommerce_get_cart_url', array( __CLASS__, 'cart_url' ) );
 		add_filter( 'woocommerce_checkout_redirect_empty_cart', array( __CLASS__, 'keep_empty_checkout' ) );
+		add_filter( 'woocommerce_checkout_update_order_review_expired', array( __CLASS__, 'keep_empty_review' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'not_configured' ), 2 );
 		add_action( 'template_redirect', array( __CLASS__, 'to_the_till' ), 3 );
 		add_action( 'admin_notices', array( __CLASS__, 'admin_notice' ) );
@@ -68,6 +69,18 @@ class Page {
 	 */
 	public static function keep_empty_checkout( $redirect ) {
 		return Host::is_pos_host() ? false : $redirect;
+	}
+
+	/**
+	 * An order review on an empty cart is not an expired session at the till.
+	 * WooCommerce would replace the whole checkout form - the side panel -
+	 * with "your session has expired" on page load, before anything is added.
+	 *
+	 * @param mixed $expired
+	 * @return mixed
+	 */
+	public static function keep_empty_review( $expired ) {
+		return Host::is_pos_host() ? false : $expired;
 	}
 
 	/** Where a request for this path goes instead: the till, for the POS host's root. */
