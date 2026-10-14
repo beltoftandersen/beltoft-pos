@@ -3,32 +3,31 @@
 namespace BeltoftPos\Host;
 
 use BeltoftPos\Support\Host;
-use BeltoftPos\Support\Options;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * The till is not a website.
  *
- * Nothing on the POS host is for search engines, and nothing on it may be
- * cached: every page is one operator's cart. The server's page cache already
- * bypasses every host but retail; this says it again from WordPress, so a
- * cache plugin that keys on host cannot serve one till's page to another.
+ * Kept out of every search index the same way as the B2B host: an
+ * X-Robots-Tag header and a robots meta tag on every response, and no
+ * sitemaps. robots.txt is left to Slim SEO - a crawler that may not fetch a
+ * page cannot read the noindex on it either.
  *
- * The two till pages also exist on every other host of this install (one
- * install, shared slugs), so they are kept out of the sitemaps there too.
+ * Nor may anything on it be cached: every page is one operator's cart. The
+ * server's page cache already bypasses every host but retail; this says it
+ * again from WordPress, so a cache plugin that keys on host cannot serve one
+ * till's page to another.
+ *
+ * Everything here acts on the POS host only. Retail is never touched.
  */
 class NoIndex {
 
 	public static function register(): void {
 		add_action( 'send_headers', array( __CLASS__, 'headers' ) );
-		add_filter( 'wp_robots', array( __CLASS__, 'robots' ), 99 );
-		// Last, after Slim SEO (9999) and zerolang (10000): added to, never replacing, their text.
-		add_filter( 'robots_txt', array( __CLASS__, 'robots_txt' ), PHP_INT_MAX );
+		add_action( 'wp_head', array( __CLASS__, 'print_noindex' ), 1 );
 		add_filter( 'wp_sitemaps_enabled', array( __CLASS__, 'sitemaps' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'no_feeds' ), 0 );
-		add_filter( 'wp_sitemaps_posts_query_args', array( __CLASS__, 'exclude_pages' ) );
-		add_filter( 'slim_seo_sitemap_post_type_query_args', array( __CLASS__, 'exclude_pages' ) );
 	}
 
 	public static function headers(): void {
@@ -44,36 +43,12 @@ class NoIndex {
 		}
 	}
 
-	/**
-	 * @param mixed $robots
-	 * @return mixed
-	 */
-	public static function robots( $robots ) {
-		if ( ! is_array( $robots ) || ! Host::is_pos_host() ) {
-			return $robots;
+	public static function print_noindex(): void {
+		if ( ! Host::is_pos_host() ) {
+			return;
 		}
 
-		unset( $robots['index'], $robots['follow'], $robots['max-image-preview'] );
-		$robots['noindex']  = true;
-		$robots['nofollow'] = true;
-
-		return $robots;
-	}
-
-	/**
-	 * The SEO plugin's robots.txt stays as it is; the POS host adds one group
-	 * after it. Crawlers merge groups for the same user agent, so the
-	 * Disallow applies to the whole host.
-	 *
-	 * @param mixed $output
-	 * @return mixed
-	 */
-	public static function robots_txt( $output ) {
-		if ( ! is_string( $output ) || ! Host::is_pos_host() ) {
-			return $output;
-		}
-
-		return rtrim( $output ) . "\n\nUser-agent: *\nDisallow: /\n";
+		echo '<meta name="robots" content="noindex, nofollow" />' . "\n";
 	}
 
 	/**
@@ -88,23 +63,5 @@ class NoIndex {
 		if ( Host::is_pos_host() && is_feed() ) {
 			wp_die( '', '', array( 'response' => 404 ) );
 		}
-	}
-
-	/**
-	 * @param mixed $args
-	 * @return mixed
-	 */
-	public static function exclude_pages( $args ) {
-		if ( ! is_array( $args ) ) {
-			return $args;
-		}
-
-		$pages = array_filter( array( Options::page_id(), Options::login_page_id() ) );
-
-		if ( $pages ) {
-			$args['post__not_in'] = array_values( array_unique( array_merge( (array) ( $args['post__not_in'] ?? array() ), $pages ) ) );
-		}
-
-		return $args;
 	}
 }
