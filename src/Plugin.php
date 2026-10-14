@@ -48,6 +48,7 @@ class Plugin {
 		Stock\Recount::register();
 		Scanner\Context::register();
 		Receipt\Email::register();
+		Bricks\Chrome::register();
 	}
 
 	public static function needs_woocommerce(): void {
