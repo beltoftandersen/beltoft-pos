@@ -32,6 +32,8 @@ class Plugin {
 		Host\NoIndex::register();
 		Host\Gate::register();
 		Checkout\Page::register();
+		Checkout\Tenders::register();
+		Checkout\PaymentMethods::register();
 	}
 
 	public static function needs_woocommerce(): void {
