@@ -119,6 +119,28 @@ class PosPoolTest extends WP_UnitTestCase {
 		$this->assertSame( '40', (string) get_post_meta( $this->product, '_stock', true ) );
 	}
 
+	/** A refund with "restock" ticked puts the goods back on the till's shelf, never in the warehouse. */
+	public function test_a_refunded_sale_with_restock_goes_back_on_the_shelf() {
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->assertSame( 1, $this->shelf() );
+
+		$item_id = array_key_first( wc_get_order( $order->get_id() )->get_items() );
+		wc_create_refund( array(
+			'order_id'      => $order->get_id(),
+			'amount'        => 0,
+			'line_items'    => array( $item_id => array( 'qty' => 2, 'refund_total' => 0 ) ),
+			'restock_items' => true,
+		) );
+
+		$this->assertSame( 3, $this->shelf() );
+		$this->assertSame( '40', (string) get_post_meta( $this->product, '_stock', true ) );
+	}
+
+	public function test_a_refunded_website_order_is_left_to_woocommerce() {
+		$this->assertTrue( Pool::divert_restock_refund( true, $this->sale( 2, false ), array() ) );
+	}
+
 	public function test_a_sale_can_take_the_shelf_below_zero() {
 		Pool::divert_reduce( true, $this->sale( 5 ) );
 		$this->assertSame( -2, $this->shelf() );

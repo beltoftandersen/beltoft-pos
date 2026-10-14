@@ -84,6 +84,15 @@ class Pool {
 		// Write side.
 		add_filter( 'woocommerce_can_reduce_order_stock', array( __CLASS__, 'divert_reduce' ), 10, 2 );
 		add_filter( 'woocommerce_can_restore_order_stock', array( __CLASS__, 'divert_restore' ), 10, 2 );
+
+		/*
+		 * A refund restocks through its own path: wc_restock_refunded_items()
+		 * asks only this filter, and then skips every line without the
+		 * `_reduced_stock` meta - which a till sale never gets, because its
+		 * reduction was diverted above. So without this, a refunded till sale
+		 * never went back on the shelf.
+		 */
+		add_filter( 'woocommerce_can_restock_refunded_items', array( __CLASS__, 'divert_restock_refund' ), 10, 3 );
 	}
 
 	/** @param mixed $order */
@@ -252,6 +261,40 @@ class Pool {
 	/** @param mixed $can @param mixed $order */
 	public static function divert_restore( $can, $order = null ) {
 		return self::divert( $can, $order, 1 );
+	}
+
+	/**
+	 * Put a till sale's refunded quantities back on the till's shelf.
+	 *
+	 * @param mixed $can
+	 * @param mixed $order
+	 * @param mixed $refunded_line_items item id => array( 'qty' => n, ... )
+	 * @return mixed
+	 */
+	public static function divert_restock_refund( $can, $order = null, $refunded_line_items = array() ) {
+		if ( ! Till::is_pos_sale( $order ) ) {
+			return $can;
+		}
+
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$qty = abs( (int) ( $refunded_line_items[ $item_id ]['qty'] ?? 0 ) );
+
+			if ( ! $qty || ! is_callable( array( $item, 'get_product' ) ) ) {
+				continue;
+			}
+
+			$product = $item->get_product();
+
+			// Never invent a count for something that was never counted.
+			if ( ! $product instanceof WC_Product || null === self::counted( $product->get_id() ) ) {
+				continue;
+			}
+
+			self::move( $product->get_id(), $qty );
+		}
+
+		// WooCommerce must not also put it back in the shared pool.
+		return false;
 	}
 
 	/**
