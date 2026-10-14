@@ -8,7 +8,7 @@ use BeltoftPos\Support\Options;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * On the POS host, the POS page is WooCommerce's checkout, cart and front page.
+ * On the POS host, the POS page is WooCommerce's checkout and the front page.
  *
  * WHY THE PAGE ID IS FILTERED rather than the URL. `wc_get_page_id()` runs its
  * option through `woocommerce_get_{page}_page_id`, and everything downstream
@@ -17,15 +17,19 @@ defined( 'ABSPATH' ) || exit;
  * detection. Swapping the id makes the POS page a REAL checkout to all of them,
  * so Bricks' native cart and checkout elements work on it unchanged.
  *
- * Cart and checkout are the same page on purpose: the counter shows both at
- * once. WooCommerce allows it - its empty-cart redirect away from the
- * checkout is skipped when the two ids are equal.
+ * NOT THE CART PAGE, although the counter shows the cart. The retail cart
+ * page is redirected away on every non-B2B host (mu-plugin
+ * beltoft-offcanvas-cart), so the till would bounce off itself. Instead every
+ * cart link on the POS host points at the till, and WooCommerce's redirect of
+ * an empty checkout to the cart is switched off there - an empty till is
+ * where a sale starts.
  */
 class Page {
 
 	public static function register(): void {
 		add_filter( 'woocommerce_get_checkout_page_id', array( __CLASS__, 'page_id' ) );
-		add_filter( 'woocommerce_get_cart_page_id', array( __CLASS__, 'page_id' ) );
+		add_filter( 'woocommerce_get_cart_url', array( __CLASS__, 'cart_url' ) );
+		add_filter( 'woocommerce_checkout_redirect_empty_cart', array( __CLASS__, 'keep_empty_checkout' ) );
 		add_filter( 'option_show_on_front', array( __CLASS__, 'show_on_front' ) );
 		add_filter( 'option_page_on_front', array( __CLASS__, 'page_on_front' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'not_configured' ), 2 );
@@ -42,6 +46,24 @@ class Page {
 		}
 
 		return Options::page_id() ?: $id;
+	}
+
+	/**
+	 * @param mixed $url
+	 * @return mixed
+	 */
+	public static function cart_url( $url ) {
+		$page = Options::page_id();
+
+		return $page && Host::is_pos_host() ? get_permalink( $page ) : $url;
+	}
+
+	/**
+	 * @param mixed $redirect
+	 * @return mixed
+	 */
+	public static function keep_empty_checkout( $redirect ) {
+		return Host::is_pos_host() ? false : $redirect;
 	}
 
 	/**

@@ -32,7 +32,20 @@ class PosPageTest extends WP_UnitTestCase {
 		$_SERVER['HTTP_HOST'] = Host::name();
 
 		$this->assertSame( $this->pos, wc_get_page_id( 'checkout' ) );
-		$this->assertSame( $this->pos, wc_get_page_id( 'cart' ) );
+		$this->assertNotSame( $this->pos, wc_get_page_id( 'cart' ), 'The retail cart page redirects itself away (beltoft-offcanvas-cart), so the till is not it.' );
+	}
+
+	/** Every cart link on the till leads back to the till, and an empty cart stays on it. */
+	public function test_the_cart_url_is_the_till_and_an_empty_cart_stays() {
+		Page::register();
+		$_SERVER['HTTP_HOST'] = Host::name();
+
+		$this->assertSame( get_permalink( $this->pos ), Page::cart_url( 'https://x/carrinho/' ) );
+		$this->assertFalse( Page::keep_empty_checkout( true ) );
+
+		$_SERVER['HTTP_HOST'] = 'example.org';
+		$this->assertSame( 'https://x/carrinho/', Page::cart_url( 'https://x/carrinho/' ) );
+		$this->assertTrue( Page::keep_empty_checkout( true ) );
 	}
 
 	public function test_other_hosts_keep_their_pages() {
