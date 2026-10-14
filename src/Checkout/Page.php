@@ -1,0 +1,92 @@
+<?php
+
+namespace BeltoftPos\Checkout;
+
+use BeltoftPos\Support\Host;
+use BeltoftPos\Support\Options;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * On the POS host, the POS page is WooCommerce's checkout, cart and front page.
+ *
+ * WHY THE PAGE ID IS FILTERED rather than the URL. `wc_get_page_id()` runs its
+ * option through `woocommerce_get_{page}_page_id`, and everything downstream
+ * asks that one function: `is_checkout()`, `is_cart()`, `wc_get_checkout_url()`,
+ * the order-received endpoint, notices, and Bricks' own checkout and cart
+ * detection. Swapping the id makes the POS page a REAL checkout to all of them,
+ * so Bricks' native cart and checkout elements work on it unchanged.
+ *
+ * Cart and checkout are the same page on purpose: the counter shows both at
+ * once. WooCommerce allows it - its empty-cart redirect away from the
+ * checkout is skipped when the two ids are equal.
+ */
+class Page {
+
+	public static function register(): void {
+		add_filter( 'woocommerce_get_checkout_page_id', array( __CLASS__, 'page_id' ) );
+		add_filter( 'woocommerce_get_cart_page_id', array( __CLASS__, 'page_id' ) );
+		add_filter( 'option_show_on_front', array( __CLASS__, 'show_on_front' ) );
+		add_filter( 'option_page_on_front', array( __CLASS__, 'page_on_front' ) );
+		add_action( 'template_redirect', array( __CLASS__, 'not_configured' ), 2 );
+		add_action( 'admin_notices', array( __CLASS__, 'admin_notice' ) );
+	}
+
+	/**
+	 * @param mixed $id
+	 * @return mixed
+	 */
+	public static function page_id( $id ) {
+		if ( ! Host::is_pos_host() ) {
+			return $id;
+		}
+
+		return Options::page_id() ?: $id;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public static function show_on_front( $value ) {
+		return Host::is_pos_host() && Options::page_id() ? 'page' : $value;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public static function page_on_front( $value ) {
+		if ( ! Host::is_pos_host() ) {
+			return $value;
+		}
+
+		return Options::page_id() ?: $value;
+	}
+
+	/** Signed in on the till with no till page: say so, plainly. */
+	public static function not_configured(): void {
+		if ( ! Host::is_pos_host() || Options::page_id() || ! is_user_logged_in() ) {
+			return;
+		}
+
+		wp_die( esc_html__( 'Till not set up.', 'beltoft-pos' ), '', array( 'response' => 503 ) );
+	}
+
+	public static function admin_notice(): void {
+		if ( Options::page_id() || ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p>%s</p></div>',
+			esc_html__( 'The till has no page yet. Publish the POS page and set its ID in the option beltoft_pos_page_id.', 'beltoft-pos' )
+		);
+	}
+}
