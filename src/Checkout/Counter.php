@@ -35,6 +35,7 @@ class Counter {
 		add_filter( 'woocommerce_cart_needs_shipping', array( __CLASS__, 'no_shipping' ) );
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'prefill' ), 10, 2 );
 		add_filter( 'woocommerce_checkout_update_customer_data', array( __CLASS__, 'keep_account_clean' ) );
+		add_filter( 'woocommerce_checkout_customer_id', array( __CLASS__, 'no_customer' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'clear_after_sale' ), 99 );
 		add_filter( 'woocommerce_format_postcode', array( __CLASS__, 'blank_postcode_stays_blank' ), 10, 2 );
 
@@ -153,6 +154,23 @@ class Counter {
 	 */
 	public static function keep_account_clean( $update ) {
 		return Till::is_session() ? false : $update;
+	}
+
+	/**
+	 * The till's account is not the customer.
+	 *
+	 * A sale placed under the operator's login was that account's order: it
+	 * earned the loyalty points for every sale at the counter (spendable on
+	 * the web shop by the same login), filled its order history, and counted
+	 * as its purchases anywhere a "customer's orders" check is made. A till
+	 * sale is a guest order; who rang it up is kept on the order instead
+	 * (Till::OPERATOR_META).
+	 *
+	 * @param mixed $customer_id
+	 * @return mixed
+	 */
+	public static function no_customer( $customer_id ) {
+		return Till::is_session() ? 0 : $customer_id;
 	}
 
 	/**

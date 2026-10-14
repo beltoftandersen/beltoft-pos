@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the Beltoft POS plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Beltoft POS 0.2.0\n"
+"Project-Id-Version: Beltoft POS 0.2.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-pos\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T16:33:26+00:00\n"
+"POT-Creation-Date: 2026-10-14T17:38:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: beltoft-pos\n"
@@ -108,16 +108,20 @@ msgstr ""
 msgid "Bank transfer"
 msgstr ""
 
-#: src/Host/Gate.php:344
+#: src/Host/Gate.php:376
 msgid "Please sign in to the till."
 msgstr ""
 
-#: src/Host/Gate.php:345
+#: src/Host/Gate.php:377
 #: src/Receipt/Email.php:65
 msgid "This account has no access to the till."
 msgstr ""
 
-#: src/Plugin.php:62
+#: src/Plugin.php:68
+msgid "Beltoft POS is not reachable: set the till's hostname with <code>define( 'BELTOFT_POS_HOST', 'pos.example.com' );</code> in wp-config.php."
+msgstr ""
+
+#: src/Plugin.php:81
 msgid "Beltoft POS needs WooCommerce."
 msgstr ""
 
@@ -131,17 +135,21 @@ msgstr ""
 msgid "This order is not a till sale."
 msgstr ""
 
-#: src/Receipt/Email.php:77
+#: src/Receipt/Email.php:81
+msgid "This receipt belongs to another operator's sale."
+msgstr ""
+
+#: src/Receipt/Email.php:87
 msgid "Enter a valid email address."
 msgstr ""
 
 #. translators: %s: email address.
-#: src/Receipt/Email.php:87
+#: src/Receipt/Email.php:97
 #, php-format
 msgid "Receipt emailed to %s."
 msgstr ""
 
-#: src/Receipt/Email.php:93
+#: src/Receipt/Email.php:103
 msgid "The receipt could not be sent."
 msgstr ""
 
@@ -149,17 +157,17 @@ msgstr ""
 msgid "Till printing is on (1/0)"
 msgstr ""
 
-#: src/Stock/AdminField.php:35
-#: src/Stock/AdminField.php:63
+#: src/Stock/AdminField.php:42
+#: src/Stock/AdminField.php:72
 msgid "Till stock"
 msgstr ""
 
-#: src/Stock/AdminField.php:82
+#: src/Stock/AdminField.php:91
 msgid "Counted separately from the shop stock above. Leave empty if it has never been counted. The till never refuses a sale over this count, so it can go below zero."
 msgstr ""
 
 #. translators: 1: product id, 2: till stock before, 3: till stock after.
-#: src/Stock/Pool.php:221
+#: src/Stock/Pool.php:231
 #, php-format
 msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr ""

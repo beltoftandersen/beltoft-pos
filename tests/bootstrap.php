@@ -10,6 +10,9 @@
  * are shared with beltoft-commerce's harness; the suites run one at a time.
  */
 
+// As staging's wp-config.php does: the plugin has no built-in host.
+define( 'BELTOFT_POS_HOST', 'pos.staging.mindthetrash.pt' );
+
 define( 'BELTOFT_SITE_PLUGINS', '/var/www/staging.mindthetrash.pt/wp-content/plugins' );
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' ) ?: '/tmp/wordpress-tests-lib';

@@ -172,4 +172,27 @@ class PosGateTest extends WP_UnitTestCase {
 		$_SERVER['HTTP_HOST'] = 'example.org';
 		$this->assertSame( 'https://x/', Gate::logout_redirect( 'https://x/' ) );
 	}
+
+	/**
+	 * Logged out, only the login page itself may render: query vars also come
+	 * from the POST body, and Bricks adds its own, so the URL alone is not
+	 * enough to judge by.
+	 */
+	public function test_only_the_resolved_login_page_counts_as_the_login_page() {
+		$login = self::factory()->post->create( array( 'post_type' => 'page', 'post_name' => 'caixa-entrar' ) );
+		$till  = self::factory()->post->create( array( 'post_type' => 'page', 'post_name' => 'caixa' ) );
+		update_option( \BeltoftPos\Support\Options::LOGIN_PAGE, $login );
+
+		$this->go_to( get_permalink( $login ) );
+		$this->assertTrue( Gate::resolved_login_page() );
+
+		$this->go_to( '/?page_id=' . $till );
+		$this->assertFalse( Gate::resolved_login_page(), 'A page_id (from the URL or a POST) that names the till.' );
+
+		$this->go_to( add_query_arg( 'page_id', $till, get_permalink( $login ) ) );
+		$this->assertFalse( Gate::resolved_login_page(), 'The login path with a page_id: WordPress calls it the login page but loads the till.' );
+
+		$this->go_to( add_query_arg( 'feed', 'rss2', get_permalink( $login ) ) );
+		$this->assertFalse( Gate::resolved_login_page() );
+	}
 }

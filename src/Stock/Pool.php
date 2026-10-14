@@ -113,6 +113,16 @@ class Pool {
 		 * never went back on the shelf.
 		 */
 		add_filter( 'woocommerce_can_restock_refunded_items', array( __CLASS__, 'divert_restock_refund' ), 10, 3 );
+
+		/*
+		 * Editing a till sale's lines in wp-admin (or over the REST API) goes
+		 * through wc_maybe_adjust_line_item_product_stock(), which reads only
+		 * Woo's own `_reduced_stock` - never set on a till line - so it took
+		 * the whole quantity off the WAREHOUSE on every "Update", and nothing
+		 * ever gave it back. The till's lines are adjusted on the till's shelf
+		 * instead, and WooCommerce is told to leave them alone.
+		 */
+		add_filter( 'woocommerce_prevent_adjust_line_item_product_stock', array( __CLASS__, 'adjust_line' ), 10, 3 );
 	}
 
 	/** @param mixed $order */
@@ -123,7 +133,7 @@ class Pool {
 			return;
 		}
 
-		Till::mark_sale( $order );
+		Till::mark_sale( $order, get_current_user_id() );
 		$order->save();
 	}
 
@@ -373,6 +383,50 @@ class Pool {
 	}
 
 	/**
+	 * A till sale's line was edited in admin: move the till's shelf by the
+	 * difference, and keep WooCommerce's own adjustment off `_stock`.
+	 *
+	 * Only once the sale has taken its stock - before that there is nothing
+	 * to adjust, and the reduction on payment will take the edited quantity.
+	 * Refunded units that already went back are not taken again.
+	 *
+	 * @param mixed $prevent
+	 * @param mixed $item
+	 * @param mixed $item_quantity -1 for the line's own quantity, 0 when it is deleted.
+	 * @return mixed
+	 */
+	public static function adjust_line( $prevent, $item = null, $item_quantity = -1 ) {
+		if ( ! $item instanceof \WC_Order_Item_Product ) {
+			return $prevent;
+		}
+
+		$order = $item->get_order();
+
+		if ( ! Till::is_pos_sale( $order ) ) {
+			return $prevent;
+		}
+
+		$product = $item->get_product();
+
+		if ( ! $order->get_data_store()->get_stock_reduced( $order->get_id() ) || ! $product instanceof WC_Product || null === self::counted( $product->get_id() ) ) {
+			return true;
+		}
+
+		$quantity = (int) $item_quantity >= 0 ? (int) $item_quantity : (int) $item->get_quantity();
+		$refunded = abs( (int) $order->get_qty_refunded_for_item( $item->get_id() ) );
+		$target   = $quantity > 0 ? max( 0, $quantity - $refunded ) : 0;
+		$reduced  = max( 0, (int) $item->get_meta( self::LINE_REDUCED, true ) );
+
+		if ( $target !== $reduced ) {
+			self::note( $order, array( self::move_noted( $product->get_id(), $reduced - $target ) ) );
+			$item->update_meta_data( self::LINE_REDUCED, $target );
+			$item->save();
+		}
+
+		return true;
+	}
+
+	/**
 	 * Move the order's lines against the till's own pool, and keep
 	 * WooCommerce away from `_stock`.
 	 *
@@ -401,8 +455,17 @@ class Pool {
 
 			$id = $product->get_id();
 
-			// Never invent a count for something that was never counted.
+			/*
+			 * Never invent a count for something that was never counted - but
+			 * do record that nothing was taken, so a count entered later is not
+			 * topped up by a cancellation of a sale it never paid for.
+			 */
 			if ( null === self::counted( $id ) ) {
+				if ( $sign < 0 ) {
+					$item->update_meta_data( self::LINE_REDUCED, 0 );
+					$item->save();
+				}
+
 				continue;
 			}
 
@@ -416,13 +479,15 @@ class Pool {
 
 			/*
 			 * Restore what is still off the shelf - less anything a refund has
-			 * already put back. A line from before this was recorded restores
-			 * its full quantity, as it always did.
+			 * already put back. A line with no record took nothing (it was added
+			 * in admin, or reduced before it was counted), so nothing goes back.
 			 */
-			$reduced = $item->get_meta( self::LINE_REDUCED, true );
-			$back    = '' === $reduced ? (int) $item->get_quantity() : max( 0, (int) $reduced );
+			$back = max( 0, (int) $item->get_meta( self::LINE_REDUCED, true ) );
 
-			$notes[] = self::move_noted( $id, $back );
+			if ( $back > 0 ) {
+				$notes[] = self::move_noted( $id, $back );
+			}
+
 			$item->delete_meta_data( self::LINE_REDUCED );
 			$item->save();
 		}

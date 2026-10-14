@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  * The receipt screen carries a Bricks form (action: Custom) with two fields
  * named pos_receipt_order (hidden, {woo_order_id}) and pos_receipt_email.
  * Bricks checks the form's nonce before custom actions run; this checks the
- * rest: a till user, a till sale, a real address.
+ * rest: a till user, a till sale they rang up, a real address.
  *
  * The email is WooCommerce's own customer invoice, so it looks like every
  * other order email. It goes to the address typed. That address is kept on
@@ -69,6 +69,16 @@ class Email {
 
 		if ( ! Till::is_pos_sale( $order ) ) {
 			return new WP_Error( 'beltoft_pos_not_a_sale', __( 'This order is not a till sale.', 'beltoft-pos' ) );
+		}
+
+		/*
+		 * The order id comes from a hidden field, which can be edited: an
+		 * operator sends receipts for their own sales only, so one cannot mail
+		 * another customer's invoice (name, NIF, address) anywhere. Shop
+		 * managers may send any.
+		 */
+		if ( Till::operator( $order ) !== (int) $user->ID && ! user_can( $user, 'manage_woocommerce' ) ) {
+			return new WP_Error( 'beltoft_pos_not_yours', __( 'This receipt belongs to another operator\'s sale.', 'beltoft-pos' ) );
 		}
 
 		$email = sanitize_email( $email );

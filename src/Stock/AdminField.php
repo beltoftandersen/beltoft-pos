@@ -19,6 +19,13 @@ class AdminField {
 
 	public const FIELD = 'beltoft_stock_pos';
 
+	/*
+	 * Its own name, not FIELD[n]: once the Variations tab has been opened its
+	 * fields are posted with the product form too, and FIELD[n] beside FIELD
+	 * turned the parent's value into an array.
+	 */
+	public const VARIATION_FIELD = 'beltoft_stock_pos_variation';
+
 	public static function register(): void {
 		add_action( 'woocommerce_product_options_inventory_product_data', array( __CLASS__, 'simple' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_simple' ) );
@@ -36,13 +43,15 @@ class AdminField {
 			'desc_tip'          => true,
 			'description'       => self::help(),
 			'type'              => 'number',
+			'wrapper_class'     => 'show_if_simple',
 			'custom_attributes' => array( 'step' => '1' ),
 		) );
 	}
 
 	/** @param mixed $product */
 	public static function save_simple( $product ): void {
-		if ( ! is_object( $product ) || ! method_exists( $product, 'get_id' ) ) {
+		// A variable parent is never sold itself; its variations carry the counts.
+		if ( ! $product instanceof \WC_Product || $product->is_type( 'variable' ) ) {
 			return;
 		}
 
@@ -57,8 +66,8 @@ class AdminField {
 	 */
 	public static function variation( $loop, $data, $variation ): void {
 		woocommerce_wp_text_input( array(
-			'id'                => self::FIELD . '[' . (int) $loop . ']',
-			'name'              => self::FIELD . '[' . (int) $loop . ']',
+			'id'                => self::VARIATION_FIELD . '[' . (int) $loop . ']',
+			'name'              => self::VARIATION_FIELD . '[' . (int) $loop . ']',
 			'value'             => (string) get_post_meta( (int) $variation->ID, Pool::META, true ),
 			'label'             => __( 'Till stock', 'beltoft-pos' ),
 			'desc_tip'          => true,
@@ -75,7 +84,7 @@ class AdminField {
 	 */
 	public static function save_variation( $variation_id, $loop ): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce verified the variation save.
-		self::store( (int) $variation_id, $_POST[ self::FIELD ][ $loop ] ?? null );
+		self::store( (int) $variation_id, $_POST[ self::VARIATION_FIELD ][ $loop ] ?? null );
 	}
 
 	private static function help(): string {
@@ -84,6 +93,11 @@ class AdminField {
 
 	/** @param mixed $raw */
 	private static function store( int $product_id, $raw ): void {
+		// Not something the form sends: leave the count as it is.
+		if ( null !== $raw && ! is_scalar( $raw ) ) {
+			return;
+		}
+
 		if ( null === $raw || '' === trim( (string) $raw ) ) {
 			delete_post_meta( $product_id, Pool::META );
 

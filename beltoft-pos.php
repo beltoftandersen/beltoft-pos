@@ -2,7 +2,7 @@
 /**
  * Plugin Name:      Beltoft POS
  * Description:      Point of sale for the shop counter: its own host, login, product list and checkout.
- * Version:          0.2.0
+ * Version:          0.2.1
  * Author:           beltoft.net
  * Text Domain:      beltoft-pos
  * Domain Path:      /languages
@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'BELTOFT_POS_FILE', __FILE__ );
 define( 'BELTOFT_POS_PATH', plugin_dir_path( __FILE__ ) );
-define( 'BELTOFT_POS_VERSION', '0.2.0' );
+define( 'BELTOFT_POS_VERSION', '0.2.1' );
 
 spl_autoload_register( function ( $class ) {
 	$prefix = 'BeltoftPos\\';

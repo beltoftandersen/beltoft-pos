@@ -10,8 +10,18 @@ class PosHostTest extends WP_UnitTestCase {
 		parent::tearDown();
 	}
 
-	public function test_the_default_host_is_the_staging_till() {
+	public function test_the_host_comes_from_the_constant() {
 		$this->assertSame( 'pos.staging.mindthetrash.pt', Host::name() );
+		$this->assertTrue( Host::is_configured() );
+	}
+
+	public function test_no_host_means_no_till_anywhere() {
+		add_filter( 'beltoft_pos_host', '__return_empty_string' );
+		$_SERVER['HTTP_HOST'] = 'pos.staging.mindthetrash.pt';
+
+		$this->assertFalse( Host::is_configured() );
+		$this->assertFalse( Host::is_pos_host(), 'With no host set, no request is the till.' );
+		$this->assertFalse( Host::is_pos_host( '' ) );
 	}
 
 	public function test_the_host_can_be_filtered() {

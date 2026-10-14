@@ -262,4 +262,72 @@ class PosPoolTest extends WP_UnitTestCase {
 		Pool::record( $order );
 		$this->assertTrue( Till::is_pos_sale( wc_get_order( $order->get_id() ) ) );
 	}
+
+	private function line( WC_Order $order ): WC_Order_Item_Product {
+		$items = wc_get_order( $order->get_id() )->get_items();
+
+		return reset( $items );
+	}
+
+	/** Saving a till sale's lines in admin moves the shelf by the difference and never the warehouse. */
+	public function test_editing_a_till_sale_in_admin_never_touches_the_warehouse() {
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+		$this->assertSame( 1, $this->shelf() );
+
+		$item = $this->line( $order );
+		$this->assertFalse( wc_maybe_adjust_line_item_product_stock( $item ), 'Unchanged: nothing moves.' );
+		$this->assertSame( 1, $this->shelf() );
+
+		$item->set_quantity( 3 );
+		$item->save();
+		wc_maybe_adjust_line_item_product_stock( $item );
+		$this->assertSame( 0, $this->shelf(), 'One more sold.' );
+
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ), 0 );
+		$this->assertSame( 3, $this->shelf(), 'Line deleted: all of it back.' );
+
+		$this->assertSame( '40', (string) get_post_meta( $this->product, '_stock', true ) );
+	}
+
+	public function test_an_admin_edit_before_the_sale_took_stock_moves_nothing() {
+		$order = $this->sale( 2 );
+
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ) );
+
+		$this->assertSame( 3, $this->shelf() );
+		$this->assertSame( '40', (string) get_post_meta( $this->product, '_stock', true ) );
+	}
+
+	public function test_an_admin_edit_of_a_website_order_is_left_to_woocommerce() {
+		$order = $this->sale( 2, false );
+		$order->get_data_store()->set_stock_reduced( $order->get_id(), true );
+
+		wc_maybe_adjust_line_item_product_stock( $this->line( $order ) );
+
+		$this->assertSame( 38, (int) wc_get_product( $this->product )->get_stock_quantity() );
+	}
+
+	/** A line sold before the product was counted took nothing, so cancelling it puts nothing back. */
+	public function test_cancelling_a_line_sold_before_it_was_counted_restores_nothing() {
+		delete_post_meta( $this->product, Pool::META );
+		$order = $this->sale( 2 );
+		wc_maybe_reduce_stock_levels( $order->get_id() );
+
+		update_post_meta( $this->product, Pool::META, 5 );
+		wc_maybe_increase_stock_levels( $order->get_id() );
+
+		$this->assertSame( 5, $this->shelf() );
+	}
+
+	public function test_record_keeps_the_operator() {
+		$order = new WC_Order();
+		$order->save();
+
+		$_SERVER['HTTP_HOST'] = Host::name();
+		wp_set_current_user( $this->operator );
+		Pool::record( $order );
+
+		$this->assertSame( $this->operator, Till::operator( wc_get_order( $order->get_id() ) ) );
+	}
 }

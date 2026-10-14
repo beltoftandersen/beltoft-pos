@@ -30,7 +30,7 @@ class PosStockAdminTest extends WP_UnitTestCase {
 		$variation->set_parent_id( $parent );
 		$vid = $variation->save();
 
-		$_POST[ AdminField::FIELD ] = array( 3 => '-1' );
+		$_POST[ AdminField::VARIATION_FIELD ] = array( 3 => '-1' );
 		AdminField::save_variation( $vid, 3 );
 
 		$this->assertSame( '-1', get_post_meta( $vid, Pool::META, true ) );

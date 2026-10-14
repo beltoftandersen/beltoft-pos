@@ -171,6 +171,11 @@ class Gate {
 		$user = wp_get_current_user();
 
 		if ( ! Host::is_pos_host() ) {
+			// No till host configured: nowhere to send anyone.
+			if ( ! Host::is_configured() ) {
+				return;
+			}
+
 			$pages       = array_filter( array( Options::page_id(), Options::login_page_id() ) );
 			$is_pos_page = $pages && is_page( $pages );
 			$is_builder  = isset( $_GET['bricks'] ) || isset( $_GET['brickspreview'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only compared.
@@ -187,7 +192,20 @@ class Gate {
 		$query = array();
 		parse_str( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_QUERY ), $query );
 
-		switch ( self::decide( $path, $user, $query ) ) {
+		$decision = self::decide( $path, $user, $query );
+
+		/*
+		 * What WordPress actually resolved, not only what the URL says. Query
+		 * vars also come from the POST body (WP::parse_request), and Bricks
+		 * adds content vars of its own (bricks_template), so a URL check alone
+		 * let a logged-out POST of page_id=<till> render the till on the
+		 * login path. Logged out, the only page that renders is the login page.
+		 */
+		if ( self::ALLOW === $decision && ! $user->exists() && ! self::resolved_login_page() && ! in_array( untrailingslashit( self::normalise( $path ) ), self::OPEN_PATHS, true ) ) {
+			$decision = self::LOGIN;
+		}
+
+		switch ( $decision ) {
 			case self::LOGIN:
 				wp_safe_redirect( Options::login_url(), 302 );
 				exit;
@@ -201,6 +219,36 @@ class Gate {
 				wp_safe_redirect( home_url( '/' ), 302 );
 				exit;
 		}
+	}
+
+	/**
+	 * Whether this request resolved to the till's login page itself, and
+	 * nothing else.
+	 *
+	 * is_page() is not enough: with the login path AND a page_id (from the
+	 * POST body), WP_Query takes the queried object from the path but selects
+	 * the post by page_id, so is_page( login ) was true while the loop held
+	 * the till. The post actually loaded has to be the login page too.
+	 */
+	public static function resolved_login_page(): bool {
+		global $wp_query;
+
+		$login = Options::login_page_id();
+
+		if ( ! $login || ! is_page( $login ) || is_feed() || is_embed() || is_preview() ) {
+			return false;
+		}
+
+		$posts = $wp_query instanceof \WP_Query ? (array) $wp_query->posts : array();
+
+		return 1 === count( $posts ) && $login === (int) ( $posts[0]->ID ?? 0 );
+	}
+
+	/** A request parameter as a string; anything else (an array, say) is empty. */
+	private static function request_string( string $key, string $default = '' ): string {
+		$value = $_REQUEST[ $key ] ?? $default; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- routing only.
+
+		return is_string( $value ) ? $value : '';
 	}
 
 	/**
@@ -252,7 +300,7 @@ class Gate {
 		}
 
 		if ( wp_doing_ajax() ) {
-			$action = sanitize_key( (string) ( $_REQUEST['action'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- routing only.
+			$action = sanitize_key( self::request_string( 'action' ) );
 
 			if ( in_array( $action, self::OPEN_AJAX, true ) ) {
 				return;
@@ -299,7 +347,7 @@ class Gate {
 			return;
 		}
 
-		$action = (string) ( $_REQUEST['action'] ?? 'login' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- routing only.
+		$action = self::request_string( 'action', 'login' );
 
 		if ( self::login_action_allowed( $action ) ) {
 			return;

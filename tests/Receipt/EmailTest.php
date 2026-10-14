@@ -28,10 +28,10 @@ class PosReceiptEmailTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->sent_to() );
 	}
 
-	private function sale( string $email ): WC_Order {
+	private function sale( string $email, ?int $operator = null ): WC_Order {
 		$order = wc_create_order();
 		$order->set_billing_email( $email );
-		Till::mark_sale( $order );
+		Till::mark_sale( $order, $operator ?? $this->operator->ID );
 		$order->save();
 
 		return $order;
@@ -70,6 +70,18 @@ class PosReceiptEmailTest extends WP_UnitTestCase {
 		$this->assertSame( 'beltoft_pos_not_a_sale', Email::send( $web->get_id(), 'a@example.test', $this->operator )->get_error_code() );
 		$this->assertSame( 'beltoft_pos_invalid_email', Email::send( $order->get_id(), 'not-an-email', $this->operator )->get_error_code() );
 		$this->assertSame( array(), $this->sent_to(), 'Nothing sent on a refusal.' );
+	}
+
+	public function test_an_operator_sends_receipts_for_their_own_sales_only() {
+		$other   = self::factory()->user->create( array( 'role' => 'pos_operator' ) );
+		$order   = $this->sale( Options::walkin_email(), $other );
+		$manager = get_user_by( 'id', self::factory()->user->create( array( 'role' => 'shop_manager' ) ) );
+
+		$this->assertSame( 'beltoft_pos_not_yours', Email::send( $order->get_id(), 'a@example.test', $this->operator )->get_error_code() );
+		$this->assertSame( array(), $this->sent_to() );
+		$this->assertSame( Options::walkin_email(), wc_get_order( $order->get_id() )->get_billing_email(), 'A refused send leaves the order as it was.' );
+
+		$this->assertTrue( Email::send( $order->get_id(), 'a@example.test', $manager ), 'A shop manager may send any till receipt.' );
 	}
 
 	public function test_the_bricks_form_is_read_by_field_name() {

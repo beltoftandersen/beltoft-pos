@@ -8,20 +8,25 @@ defined( 'ABSPATH' ) || exit;
  * The only place in this plugin that knows the till's hostname.
  *
  * One WordPress install answers on several hosts; the host decides which
- * interface a request gets. The till's is set per environment: the
- * BELTOFT_POS_HOST constant in wp-config.php (production), else the
- * beltoft_pos_host filter, else staging's.
+ * interface a request gets. The till's is set per environment with the
+ * BELTOFT_POS_HOST constant in wp-config.php; the beltoft_pos_host filter can
+ * still override it.
+ *
+ * NO BUILT-IN DEFAULT. It used to fall back to staging's hostname, so a
+ * deploy without the constant quietly treated another environment's host as
+ * its own - and sent operators and the till pages there. Unset, there is no
+ * till host: nothing is gated, nothing redirects, and admins get a notice.
  */
 class Host {
 
-	public const DEFAULT_HOST = 'pos.staging.mindthetrash.pt';
-
 	public static function name(): string {
-		$host = defined( 'BELTOFT_POS_HOST' )
-			? (string) BELTOFT_POS_HOST
-			: (string) apply_filters( 'beltoft_pos_host', self::DEFAULT_HOST );
+		$host = defined( 'BELTOFT_POS_HOST' ) ? (string) BELTOFT_POS_HOST : '';
 
-		return self::normalise( $host );
+		return self::normalise( (string) apply_filters( 'beltoft_pos_host', $host ) );
+	}
+
+	public static function is_configured(): bool {
+		return '' !== self::name();
 	}
 
 	/** This request's host, or '' for cron, WP-CLI and queued jobs. */
@@ -37,7 +42,7 @@ class Host {
 	public static function is_pos_host( ?string $host = null ): bool {
 		$host = null === $host ? self::current() : self::normalise( $host );
 
-		return '' !== $host && $host === self::name();
+		return '' !== $host && self::is_configured() && $host === self::name();
 	}
 
 	public static function url( string $path = '/' ): string {

@@ -116,4 +116,12 @@ class PosCounterTest extends WP_UnitTestCase {
 		$this->assertSame( '', Counter::drop_terms_element( '<div><input type="hidden" name="terms-field" value="1"></div>' ) );
 		$this->assertSame( '<div>other</div>', Counter::drop_terms_element( '<div>other</div>' ) );
 	}
+
+	/** The till's login is not the customer: a sale is a guest order, so the account earns nothing from it. */
+	public function test_a_till_sale_is_a_guest_order() {
+		$this->assertSame( 7, Counter::no_customer( 7 ), 'Elsewhere the signed-in customer buys.' );
+
+		$this->at_the_till();
+		$this->assertSame( 0, Counter::no_customer( $this->operator ) );
+	}
 }

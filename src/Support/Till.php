@@ -22,6 +22,9 @@ class Till {
 
 	public const SALE_META = '_beltoft_pos_sale';
 
+	/** Who rang the sale up - the order itself is a guest order. */
+	public const OPERATOR_META = '_beltoft_pos_operator';
+
 	public static function is_session(): bool {
 		return Host::is_pos_host() && self::is_till_user( wp_get_current_user() );
 	}
@@ -40,8 +43,17 @@ class Till {
 		return $order instanceof WC_Order && '1' === (string) $order->get_meta( self::SALE_META );
 	}
 
-	/** Sets the marker; the caller saves. */
-	public static function mark_sale( WC_Order $order ): void {
+	/** Sets the marker and the operator; the caller saves. */
+	public static function mark_sale( WC_Order $order, int $operator = 0 ): void {
 		$order->update_meta_data( self::SALE_META, '1' );
+
+		if ( $operator > 0 ) {
+			$order->update_meta_data( self::OPERATOR_META, $operator );
+		}
+	}
+
+	/** The till user who rang the sale up, 0 when unknown. */
+	public static function operator( WC_Order $order ): int {
+		return (int) $order->get_meta( self::OPERATOR_META );
 	}
 }

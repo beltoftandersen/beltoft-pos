@@ -62,6 +62,13 @@
 		if(!add.hasAttribute('data-original-text'))add.setAttribute('data-original-text',add.innerHTML);
 		add.classList.add('is-busy');
 		add.setAttribute('aria-busy','true');
+		function fail(cap){
+			var el=wrap.querySelector('.beltoft-loop-note');
+			if(!el){el=document.createElement('span');el.className='beltoft-loop-note';el.setAttribute('role','status');wrap.appendChild(el);}
+			el.textContent=cap?i18n.couldNotAddCap.replace('%d',cap):i18n.couldNotAdd;
+			add.classList.remove('is-busy');
+			add.removeAttribute('aria-busy');
+		}
 		fetch('/?wc-ajax=add_to_cart',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()})
 			.then(function(r){return r.json();})
 			.then(function(data){
@@ -81,13 +88,7 @@
 					 * (the stock cap, which is on the input) rather than a bare
 					 * cross the buyer cannot act on.
 					 */
-					var host=wrap;
-					var el=host.querySelector('.beltoft-loop-note');
-					if(!el){el=document.createElement('span');el.className='beltoft-loop-note';el.setAttribute('role','status');host.appendChild(el);}
-					var cap=qty&&parseInt(qty.max,10);
-					el.textContent=cap?i18n.couldNotAddCap.replace('%d',cap):i18n.couldNotAdd;
-					add.classList.remove('is-busy');
-					add.removeAttribute('aria-busy');
+					fail(qty&&parseInt(qty.max,10));
 					return;
 				}
 				var cleared=wrap.querySelector('.beltoft-loop-note');
@@ -111,7 +112,9 @@
 				add.classList.remove('is-busy');
 				add.removeAttribute('aria-busy');
 			})
-			.catch(function(){add.classList.remove('is-busy');add.removeAttribute('aria-busy');});
+			/* Not JSON (a sign-in page after the session ran out, a PHP notice
+			   before the body) or no network: the line was not added - say so. */
+			.catch(function(){fail(0);});
 	});
 	document.addEventListener('click',function(e){
 		var step=e.target.closest('.beltoft-loop-qty__step');

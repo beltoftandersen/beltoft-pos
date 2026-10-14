@@ -29,6 +29,10 @@ class Plugin {
 
 		add_action( 'init', array( Support\Installer::class, 'maybe_upgrade' ) );
 
+		if ( ! Support\Host::is_configured() ) {
+			add_action( 'admin_notices', array( __CLASS__, 'needs_host' ) );
+		}
+
 		Host\NoIndex::register();
 		Host\Gate::register();
 		Checkout\Page::register();
@@ -47,9 +51,24 @@ class Plugin {
 		Stock\Recount::register();
 		Scanner\Context::register();
 		Receipt\Email::register();
+		Receipt\Quiet::register();
 		Receipt\Printing::register();
 		Bricks\Chrome::register();
 		Host\RetailAssets::register();
+	}
+
+	public static function needs_host(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p>%s</p></div>',
+			wp_kses(
+				__( 'Beltoft POS is not reachable: set the till\'s hostname with <code>define( \'BELTOFT_POS_HOST\', \'pos.example.com\' );</code> in wp-config.php.', 'beltoft-pos' ),
+				array( 'code' => array() )
+			)
+		);
 	}
 
 	public static function needs_woocommerce(): void {

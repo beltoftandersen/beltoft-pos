@@ -72,4 +72,27 @@ class PosTendersTest extends WP_UnitTestCase {
 		$this->assertSame( 'success', $result['result'] );
 		$this->assertTrue( wc_get_order( $order->get_id() )->is_paid() );
 	}
+
+	/** The customer leaves with the goods: a paid till sale is finished, not waiting to be packed. */
+	public function test_a_till_sale_is_completed_on_payment_and_a_web_order_is_not() {
+		$product = new WC_Product_Simple();
+		$product->set_regular_price( '5' );
+		$product->save();
+
+		$_SERVER['HTTP_HOST'] = Host::name();
+		wp_set_current_user( $this->operator );
+
+		$sale = wc_create_order();
+		$sale->add_product( $product, 1 );
+		\BeltoftPos\Support\Till::mark_sale( $sale );
+		$sale->save();
+		( new Tender( 'pos_cash', 'Cash' ) )->process_payment( $sale->get_id() );
+		$this->assertSame( 'completed', wc_get_order( $sale->get_id() )->get_status() );
+
+		$web = wc_create_order();
+		$web->add_product( $product, 1 );
+		$web->save();
+		$web->payment_complete();
+		$this->assertSame( 'processing', wc_get_order( $web->get_id() )->get_status() );
+	}
 }

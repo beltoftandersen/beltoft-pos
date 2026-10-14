@@ -67,49 +67,49 @@ msgstr "Dinheiro"
 msgid "Bank transfer"
 msgstr "Transferência bancária"
 
-#: src/Host/Gate.php:316
+#: src/Host/Gate.php:376
 msgid "Please sign in to the till."
 msgstr "Inicie sessão na caixa."
 
-#: src/Host/Gate.php:317
-#: src/Receipt/Email.php:63
+#: src/Host/Gate.php:377
+#: src/Receipt/Email.php:65
 msgid "This account has no access to the till."
 msgstr "Esta conta não tem acesso à caixa."
 
-#: src/Plugin.php:63
+#: src/Plugin.php:81
 msgid "Beltoft POS needs WooCommerce."
 msgstr "O Beltoft POS precisa do WooCommerce."
 
 #. translators: %s: email address.
-#: src/Receipt/Email.php:51
+#: src/Receipt/Email.php:52
 #, php-format
 msgid "Receipt sent to %s."
 msgstr "Recibo enviado para %s."
 
-#: src/Receipt/Email.php:69
+#: src/Receipt/Email.php:71
 msgid "This order is not a till sale."
 msgstr "Esta encomenda não é uma venda da caixa."
 
-#: src/Receipt/Email.php:75
+#: src/Receipt/Email.php:87
 msgid "Enter a valid email address."
 msgstr "Introduza um endereço de email válido."
 
 #. translators: %s: email address.
-#: src/Receipt/Email.php:85
+#: src/Receipt/Email.php:97
 #, php-format
 msgid "Receipt emailed to %s."
 msgstr "Recibo enviado por email para %s."
 
-#: src/Receipt/Email.php:91
+#: src/Receipt/Email.php:103
 msgid "The receipt could not be sent."
 msgstr "Não foi possível enviar o recibo."
 
-#: src/Stock/AdminField.php:35
-#: src/Stock/AdminField.php:63
+#: src/Stock/AdminField.php:42
+#: src/Stock/AdminField.php:72
 msgid "Till stock"
 msgstr "Stock da caixa"
 
-#: src/Stock/AdminField.php:82
+#: src/Stock/AdminField.php:91
 msgid "Counted separately from the shop stock above. Leave empty if it has never been counted. The till never refuses a sale over this count, so it can go below zero."
 msgstr "Contado à parte do stock da loja acima. Deixe vazio se nunca foi contado. A caixa nunca recusa uma venda por causa desta contagem, por isso pode ficar abaixo de zero."
 
@@ -139,38 +139,38 @@ msgstr "Cliente de balcão"
 msgid "The till has no header: publish a Bricks header template with the slug %s (no conditions)."
 msgstr "A caixa não tem cabeçalho: publique um template de cabeçalho do Bricks com o slug %s (sem condições)."
 
-#: src/Catalog/LoopQuantity.php:127
-#: src/Catalog/LoopQuantity.php:245
+#: src/Catalog/LoopQuantity.php:111
+#: src/Catalog/LoopQuantity.php:188
 msgid "Quantity"
 msgstr "Quantidade"
 
-#: src/Catalog/LoopQuantity.php:131
-#: src/Catalog/LoopQuantity.php:247
+#: src/Catalog/LoopQuantity.php:115
+#: src/Catalog/LoopQuantity.php:190
 msgid "Decrease quantity"
 msgstr "Diminuir quantidade"
 
-#: src/Catalog/LoopQuantity.php:132
-#: src/Catalog/LoopQuantity.php:248
+#: src/Catalog/LoopQuantity.php:116
+#: src/Catalog/LoopQuantity.php:191
 msgid "Increase quantity"
 msgstr "Aumentar quantidade"
 
-#: src/Catalog/LoopQuantity.php:167
+#: src/Catalog/LoopQuantity.php:139
 msgid "Sold out"
 msgstr "Esgotado"
 
 #. translators: %d: units in stock.
-#: src/Catalog/LoopQuantity.php:280
+#: src/Catalog/LoopQuantity.php:213
 #, php-format
 msgid "Only %d in stock."
 msgstr "Apenas %d em stock."
 
 #. translators: %d: units in stock.
-#: src/Catalog/LoopQuantity.php:282
+#: src/Catalog/LoopQuantity.php:215
 #, php-format
 msgid "Could not add. Only %d in stock."
 msgstr "Não foi possível adicionar. Apenas %d em stock."
 
-#: src/Catalog/LoopQuantity.php:283
+#: src/Catalog/LoopQuantity.php:216
 msgid "Could not add this line."
 msgstr "Não foi possível adicionar esta linha."
 
@@ -179,7 +179,15 @@ msgid "Till printing is on (1/0)"
 msgstr "Impressão na caixa ligada (1/0)"
 
 #. translators: 1: product id, 2: till stock before, 3: till stock after.
-#: src/Stock/Pool.php:192
+#: src/Stock/Pool.php:231
 #, php-format
 msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr "Stock da caixa do artigo #%1$s: %2$s → %3$s."
+
+#: src/Plugin.php:68
+msgid "Beltoft POS is not reachable: set the till's hostname with <code>define( 'BELTOFT_POS_HOST', 'pos.example.com' );</code> in wp-config.php."
+msgstr "O Beltoft POS não está acessível: defina o endereço da caixa com <code>define( 'BELTOFT_POS_HOST', 'pos.example.com' );</code> no wp-config.php."
+
+#: src/Receipt/Email.php:81
+msgid "This receipt belongs to another operator's sale."
+msgstr "Este recibo pertence a uma venda de outro operador."
