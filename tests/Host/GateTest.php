@@ -57,6 +57,21 @@ class PosGateTest extends WP_UnitTestCase {
 		$this->assertSame( Gate::ALLOW, Gate::decide( '/caixa-entrar/', null ) );
 	}
 
+	/**
+	 * The theme hooks wp_logout to redirect and exit, which swallowed the
+	 * refusal notice. A refused account is signed out without that action.
+	 */
+	public function test_a_refused_account_is_signed_out_without_the_logout_action() {
+		wp_set_current_user( $this->customer->ID );
+		add_action( 'wp_logout', function () {
+			throw new RuntimeException( 'wp_logout fired' );
+		} );
+
+		Gate::sign_out();
+
+		$this->assertSame( 0, get_current_user_id() );
+	}
+
 	public function test_api_calls() {
 		$this->assertSame( 401, Gate::api_status( null ) );
 		$this->assertSame( 401, Gate::api_status( new WP_User( 0 ) ) );

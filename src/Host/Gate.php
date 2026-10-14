@@ -164,7 +164,7 @@ class Gate {
 				exit;
 
 			case self::REFUSE:
-				wp_logout();
+				self::sign_out();
 				wp_safe_redirect( add_query_arg( 'refused', '1', Options::login_url() ), 302 );
 				exit;
 
@@ -172,6 +172,24 @@ class Gate {
 				wp_safe_redirect( home_url( '/' ), 302 );
 				exit;
 		}
+	}
+
+	/**
+	 * Sign a refused account out WITHOUT wp_logout().
+	 *
+	 * wp_logout() fires the `wp_logout` action, and the theme hooks it to
+	 * redirect to the shop's own sign-in page and exit - so the refusal notice
+	 * on the till's login page was never reached. The session and cookies go
+	 * exactly as they would; only the shop's logout behaviour is skipped.
+	 */
+	public static function sign_out(): void {
+		wp_destroy_current_session();
+
+		if ( ! headers_sent() ) {
+			wp_clear_auth_cookie();
+		}
+
+		wp_set_current_user( 0 );
 	}
 
 	public static function guard_wc_ajax(): void {
