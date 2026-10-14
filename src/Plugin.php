@@ -26,6 +26,8 @@ class Plugin {
 
 			return;
 		}
+
+		add_action( 'init', array( Support\Installer::class, 'maybe_upgrade' ) );
 	}
 
 	public static function needs_woocommerce(): void {

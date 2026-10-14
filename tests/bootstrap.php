@@ -33,3 +33,6 @@ tests_add_filter( 'setup_theme', function () {
 } );
 
 require $_tests_dir . '/includes/bootstrap.php';
+
+// The role, once, outside any test's transaction - as activation would.
+\BeltoftPos\Support\Installer::install();
