@@ -55,6 +55,9 @@
 		body.append('product_id',pick.value);
 		body.append('quantity',(parseInt(qty&&qty.value,10)||1));
 		var label=add.textContent;
+		/* Bricks restores the label it saved on `adding_to_cart` - an event this
+		   path never fires - so it put back nothing and left the button blank. */
+		add.setAttribute('data-original-text',add.innerHTML);
 		add.classList.add('is-busy');
 		add.setAttribute('aria-busy','true');
 		fetch('/?wc-ajax=add_to_cart',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()})
