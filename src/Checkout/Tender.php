@@ -31,7 +31,8 @@ defined( 'ABSPATH' ) || exit;
  * WHY payment_complete() AND NOT update_status(). Both `bacs` and `cod` park
  * the order awaiting payment, because for them the money has not arrived yet.
  * At a till it already has. payment_complete() marks it paid and reduces stock,
- * and Tenders::completed() makes that a completed order straight away.
+ * leaving the order in processing - as the till always did; the shop
+ * completes it from there.
  */
 class Tender extends WC_Payment_Gateway {
 

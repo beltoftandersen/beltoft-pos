@@ -33,23 +33,6 @@ class Tenders {
 
 	public static function register(): void {
 		add_filter( 'woocommerce_payment_gateways', array( __CLASS__, 'add' ) );
-		add_filter( 'woocommerce_payment_complete_order_status', array( __CLASS__, 'completed' ), 10, 3 );
-	}
-
-	/**
-	 * A till sale is finished when it is paid: the customer has left with the
-	 * goods. Left in processing it sat in the web shop's packing queue,
-	 * already paid, where it could be packed and shipped a second time.
-	 *
-	 * @param mixed $status
-	 * @param mixed $order_id
-	 * @param mixed $order
-	 * @return mixed
-	 */
-	public static function completed( $status, $order_id = 0, $order = null ) {
-		$order = $order instanceof \WC_Order ? $order : wc_get_order( $order_id );
-
-		return \BeltoftPos\Support\Till::is_pos_sale( $order ) ? 'completed' : $status;
 	}
 
 	/**
