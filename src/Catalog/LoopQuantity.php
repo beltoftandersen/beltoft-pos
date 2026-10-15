@@ -197,9 +197,13 @@ class LoopQuantity {
 	 * custom CSS of the list's add-to-cart element on the till page.
 	 */
 	public static function enqueue(): void {
+		if ( ! self::applies() ) {
+			return;
+		}
+
 		$page = Options::page_id();
 
-		if ( ! $page || ! self::applies() || ! is_page( $page ) ) {
+		if ( ! $page || ! is_page( $page ) ) {
 			return;
 		}
 

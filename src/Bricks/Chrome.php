@@ -71,13 +71,14 @@ class Chrome {
 	 * (most likely right after a production replay).
 	 */
 	public static function admin_notice(): void {
-		if ( self::template_id( self::HEADER_SLUG ) || ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
+		// Cheap checks first: this runs on every admin screen.
+		if ( ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
 			return;
 		}
 
 		$screen = get_current_screen();
 
-		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) ) {
+		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) || self::template_id( self::HEADER_SLUG ) ) {
 			return;
 		}
 

@@ -19,10 +19,30 @@ defined( 'ABSPATH' ) || exit;
  */
 class Host {
 
-	public static function name(): string {
-		$host = defined( 'BELTOFT_POS_HOST' ) ? (string) BELTOFT_POS_HOST : '';
+	/**
+	 * Asked thousands of times on a busy shop page - every URL WordPress
+	 * builds and every stock read passes a host check - so the answer is kept
+	 * for the request. Only while nothing filters it: a filter can change its
+	 * answer at any moment, so then it is asked every time.
+	 */
+	private static ?string $name = null;
 
-		return self::normalise( (string) apply_filters( 'beltoft_pos_host', $host ) );
+	/** @var array<string, string> raw HTTP_HOST => normalised */
+	private static array $normalised = array();
+
+	public static function name(): string {
+		if ( null !== self::$name && ! has_filter( 'beltoft_pos_host' ) ) {
+			return self::$name;
+		}
+
+		$host = defined( 'BELTOFT_POS_HOST' ) ? (string) BELTOFT_POS_HOST : '';
+		$name = self::normalise( (string) apply_filters( 'beltoft_pos_host', $host ) );
+
+		if ( ! has_filter( 'beltoft_pos_host' ) ) {
+			self::$name = $name;
+		}
+
+		return $name;
 	}
 
 	public static function is_configured(): bool {
@@ -31,7 +51,9 @@ class Host {
 
 	/** This request's host, or '' for cron, WP-CLI and queued jobs. */
 	public static function current(): string {
-		return self::normalise( (string) ( $_SERVER['HTTP_HOST'] ?? '' ) );
+		$raw = (string) ( $_SERVER['HTTP_HOST'] ?? '' );
+
+		return self::$normalised[ $raw ] ??= self::normalise( $raw );
 	}
 
 	/**
@@ -42,7 +64,13 @@ class Host {
 	public static function is_pos_host( ?string $host = null ): bool {
 		$host = null === $host ? self::current() : self::normalise( $host );
 
-		return '' !== $host && self::is_configured() && $host === self::name();
+		if ( '' === $host ) {
+			return false;
+		}
+
+		$name = self::name();
+
+		return '' !== $name && $host === $name;
 	}
 
 	public static function url( string $path = '/' ): string {

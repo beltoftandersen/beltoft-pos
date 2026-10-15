@@ -28,7 +28,8 @@ class Installer {
 			);
 		}
 
-		update_option( self::VERSION_OPTION, BELTOFT_POS_VERSION, false );
+		// Autoloaded: maybe_upgrade() reads it on every request of every host.
+		update_option( self::VERSION_OPTION, BELTOFT_POS_VERSION, true );
 	}
 
 	/** Deploys replace files without activating, so the version decides. */

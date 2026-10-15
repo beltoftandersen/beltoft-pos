@@ -30,9 +30,13 @@ class AddToCart {
 	 * @return mixed
 	 */
 	public static function url( $url, $product = null ) {
+		if ( ! self::applies( $product ) ) {
+			return $url;
+		}
+
 		$page = Options::page_id();
 
-		if ( ! $page || ! self::applies( $product ) ) {
+		if ( ! $page ) {
 			return $url;
 		}
 

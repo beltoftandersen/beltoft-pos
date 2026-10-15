@@ -44,8 +44,12 @@ class Context {
 	}
 
 	public static function applies(): bool {
+		if ( ! Host::is_pos_host() ) {
+			return false;
+		}
+
 		$page = Options::page_id();
 
-		return $page && Host::is_pos_host() && is_page( $page );
+		return $page && is_page( $page );
 	}
 }

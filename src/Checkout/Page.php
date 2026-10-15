@@ -58,9 +58,13 @@ class Page {
 	 * @return mixed
 	 */
 	public static function cart_url( $url ) {
+		if ( ! Host::is_pos_host() ) {
+			return $url;
+		}
+
 		$page = Options::page_id();
 
-		return $page && Host::is_pos_host() ? get_permalink( $page ) : $url;
+		return $page ? get_permalink( $page ) : $url;
 	}
 
 	/**
@@ -85,9 +89,13 @@ class Page {
 
 	/** Where a request for this path goes instead: the till, for the POS host's root. */
 	public static function front_target( string $path ): ?string {
+		if ( ! Host::is_pos_host() ) {
+			return null;
+		}
+
 		$page = Options::page_id();
 
-		if ( ! $page || ! Host::is_pos_host() || '' !== trim( $path, '/' ) ) {
+		if ( ! $page || '' !== trim( $path, '/' ) ) {
 			return null;
 		}
 
@@ -113,13 +121,14 @@ class Page {
 	}
 
 	public static function admin_notice(): void {
-		if ( Options::page_id() || ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
+		// Cheap checks first: this runs on every admin screen.
+		if ( ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'get_current_screen' ) ) {
 			return;
 		}
 
 		$screen = get_current_screen();
 
-		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) ) {
+		if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'plugins' ), true ) || Options::page_id() ) {
 			return;
 		}
 
