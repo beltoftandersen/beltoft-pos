@@ -67,16 +67,16 @@ msgstr "Dinheiro"
 msgid "Bank transfer"
 msgstr "Transferência bancária"
 
-#: src/Host/Gate.php:401
+#: src/Host/Gate.php:449
 msgid "Please sign in to the till."
 msgstr "Inicie sessão na caixa."
 
-#: src/Host/Gate.php:402
+#: src/Host/Gate.php:450
 #: src/Receipt/Email.php:65
 msgid "This account has no access to the till."
 msgstr "Esta conta não tem acesso à caixa."
 
-#: src/Plugin.php:81
+#: src/Plugin.php:82
 msgid "Beltoft POS needs WooCommerce."
 msgstr "O Beltoft POS precisa do WooCommerce."
 
@@ -184,7 +184,7 @@ msgstr "Impressão na caixa ligada (1/0)"
 msgid "Till stock of item #%1$s: %2$s → %3$s."
 msgstr "Stock da caixa do artigo #%1$s: %2$s → %3$s."
 
-#: src/Plugin.php:68
+#: src/Plugin.php:69
 msgid "Beltoft POS is not reachable: set the till's hostname with <code>define( 'BELTOFT_POS_HOST', 'pos.example.com' );</code> in wp-config.php."
 msgstr "O Beltoft POS não está acessível: defina o endereço da caixa com <code>define( 'BELTOFT_POS_HOST', 'pos.example.com' );</code> no wp-config.php."
 
@@ -192,6 +192,10 @@ msgstr "O Beltoft POS não está acessível: defina o endereço da caixa com <co
 msgid "This receipt belongs to another operator's sale."
 msgstr "Este recibo pertence a uma venda de outro operador."
 
-#: src/Host/Gate.php:216
+#: src/Host/Gate.php:264
 msgid "The till is not set up yet: its login page is missing."
 msgstr "A caixa ainda não está configurada: falta a página de entrada."
+
+#: src/Host/Gate.php:166
+msgid "This account can only sign in at the till."
+msgstr "Esta conta só pode iniciar sessão na caixa."

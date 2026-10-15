@@ -37,6 +37,7 @@ spl_autoload_register( function ( $class ) {
  * them must already point here.
  */
 BeltoftPos\Host\Urls::register();
+BeltoftPos\Host\Gate::register_early();
 
 // WooCommerce boots on plugins_loaded at 10; the till wires its hooks after it.
 add_action( 'plugins_loaded', array( 'BeltoftPos\\Plugin', 'init' ), 20 );

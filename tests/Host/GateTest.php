@@ -159,7 +159,7 @@ class PosGateTest extends WP_UnitTestCase {
 	public function test_elsewhere_till_pages_and_operators_go_to_the_pos_host() {
 		$this->assertSame( Gate::TO_POS, Gate::decide_elsewhere( true, null, false ), 'The till page never renders as retail.' );
 		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( true, $this->manager, true ), 'Bricks edits it on retail.' );
-		$this->assertSame( Gate::TO_POS, Gate::decide_elsewhere( false, $this->operator, false ) );
+		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( false, $this->operator, false ), 'Not sent anywhere: on other hosts a till account is simply not signed in.' );
 		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( false, $this->manager, false ), 'Staff also use the shop.' );
 		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( false, $this->customer, false ) );
 		$this->assertSame( Gate::ALLOW, Gate::decide_elsewhere( false, null, false ) );
@@ -194,5 +194,23 @@ class PosGateTest extends WP_UnitTestCase {
 
 		$this->go_to( add_query_arg( 'feed', 'rss2', get_permalink( $login ) ) );
 		$this->assertFalse( Gate::resolved_login_page() );
+	}
+
+	/** A till account signs in at the till only; elsewhere the login is refused and a session does not count. */
+	public function test_a_till_account_has_no_login_on_other_hosts() {
+		$_SERVER['HTTP_HOST'] = 'b2b.example.test';
+
+		$this->assertWPError( Gate::operator_login_elsewhere( $this->operator ) );
+		$this->assertSame( $this->manager, Gate::operator_login_elsewhere( $this->manager ), 'Staff who run the shop sign in everywhere.' );
+		$this->assertSame( $this->customer, Gate::operator_login_elsewhere( $this->customer ) );
+		$this->assertSame( 0, Gate::operator_elsewhere( $this->operator->ID ) );
+		$this->assertSame( $this->customer->ID, Gate::operator_elsewhere( $this->customer->ID ) );
+
+		$_SERVER['HTTP_HOST'] = Host::name();
+		$this->assertSame( $this->operator, Gate::operator_login_elsewhere( $this->operator ) );
+		$this->assertSame( $this->operator->ID, Gate::operator_elsewhere( $this->operator->ID ) );
+
+		unset( $_SERVER['HTTP_HOST'] );
+		$this->assertSame( $this->operator->ID, Gate::operator_elsewhere( $this->operator->ID ), 'WP-CLI and cron have no host and are left alone.' );
 	}
 }

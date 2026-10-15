@@ -20,8 +20,9 @@ defined( 'ABSPATH' ) || exit;
  * wc-ajax answer 401/403 too, because the cart and the checkout run on them.
  *
  * Elsewhere: the two till pages exist on every host of this install, and
- * must never render there as shop pages; and an operator account belongs on
- * the till, so it is sent there.
+ * must never render there as shop pages; and a till account has no login
+ * there at all - it is refused at sign-in and an existing session counts as
+ * signed out.
  *
  * The decisions are pure functions of path and user, so they can be tested
  * as a table; the hooks below only carry them out.
@@ -94,6 +95,16 @@ class Gate {
 		 */
 	}
 
+	/**
+	 * The till account's login rules, registered as the plugin file loads -
+	 * not in register(), which runs on plugins_loaded 20: other plugins ask
+	 * for the current user before that, and WordPress resolves it once.
+	 */
+	public static function register_early(): void {
+		add_filter( 'wp_authenticate_user', array( __CLASS__, 'operator_login_elsewhere' ), 99 );
+		add_filter( 'determine_current_user', array( __CLASS__, 'operator_elsewhere' ), 99 );
+	}
+
 	public static function decide( string $path, ?WP_User $user, array $query = array() ): string {
 		$path     = self::normalise( $path );
 		$on_login = $path === Options::login_path();
@@ -117,20 +128,65 @@ class Gate {
 		return self::LOGIN;
 	}
 
+	/**
+	 * Off the POS host the till only looks after its own two pages: they exist
+	 * on every host of the install and must not render there. Who may use
+	 * another host is that host's business - a till account simply has no
+	 * login there (see operator_elsewhere()).
+	 */
 	public static function decide_elsewhere( bool $is_pos_page, ?WP_User $user, bool $is_builder ): string {
 		if ( $is_builder ) {
 			return self::ALLOW;
 		}
 
-		if ( $is_pos_page ) {
-			return self::TO_POS;
-		}
+		return $is_pos_page ? self::TO_POS : self::ALLOW;
+	}
 
-		$operator = $user instanceof WP_User
+	/** A till-only account: the till role and nothing that runs the shop. */
+	public static function is_operator_only( $user ): bool {
+		return $user instanceof WP_User
+			&& $user->exists()
 			&& in_array( Installer::ROLE, (array) $user->roles, true )
 			&& ! user_can( $user, 'manage_woocommerce' );
+	}
 
-		return $operator ? self::TO_POS : self::ALLOW;
+	/** A web request on a host other than the till's (cron and WP-CLI have no host). */
+	private static function elsewhere(): bool {
+		return '' !== Host::current() && ! Host::is_pos_host();
+	}
+
+	/**
+	 * A till account cannot sign in anywhere but the till.
+	 *
+	 * On wp_authenticate_user, which every username/password sign-in passes
+	 * through - wp-login.php, the B2B and shop login forms, WooCommerce's
+	 * account login - after the password is known to be right, so the refusal
+	 * says nothing about whether it was.
+	 *
+	 * @param mixed $user
+	 * @return mixed
+	 */
+	public static function operator_login_elsewhere( $user ) {
+		if ( ! self::elsewhere() || ! self::is_operator_only( $user ) ) {
+			return $user;
+		}
+
+		return new WP_Error( 'beltoft_pos_till_only', __( 'This account can only sign in at the till.', 'beltoft-pos' ) );
+	}
+
+	/**
+	 * A till session already open on another host counts as signed out there
+	 * - a login from before this rule, or one carried over by any other route.
+	 *
+	 * @param mixed $user_id
+	 * @return mixed
+	 */
+	public static function operator_elsewhere( $user_id ) {
+		if ( ! $user_id || ! self::elsewhere() ) {
+			return $user_id;
+		}
+
+		return self::is_operator_only( get_userdata( (int) $user_id ) ) ? 0 : $user_id;
 	}
 
 	/** Whether a cart/checkout form action in $request must be refused for $user. */
